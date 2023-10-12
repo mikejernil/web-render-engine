@@ -1,11 +1,11 @@
 # Render Engine Basics - Series
 ### Created by: Jernil - 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/)
 
-Tutorial series for creating 3D render engines on the Web for Real-time rendering of any dataset from Vector tiles, 3D maps to city-scale 3D meshes, point clouds &amp; Gaussian Splats.
+Repo for LinkedIn Tutorial series - Creating 3D render engines on the Web for Real-time rendering of any dataset from Vector tiles, 3D maps to city-scale 3D meshes, point clouds &amp; Gaussian Splats.
 
-⭐️ More than building a Render engine from scratch, this series is to help you understand the Core components / First principles of a Render engine so you can build your own Render engine pipelines for any application end-to-end! 
+More than building a Render engine from scratch, this series is to help you understand the Core components / First principles of a Render engine so you can build your own Render engine pipelines for any application end-to-end! 
 
-🧊 If you're interested in learning more about building Render Engines, Star/follow this repository. I'll be updating this page starting from the next post in the series!!
+🧊 If you're interested in learning more about building Render Engines, Star ⭐️ / Follow this repository. I'll be updating this page starting from the next post in the series!!
 
 ## Roadmap
 1. Creating a Web based 3D Renderer from Scratch (not so much from scratch, we'll be using libraries as this is not the focus of this series)
@@ -25,4 +25,4 @@ For each of these steps, we will follow a step-by-step process of using the Firs
 ![Screenshot 2023-10-12 at 4 56 04 PM](https://github.com/mikejernil/renderengine-basics/assets/43872457/d3433a1a-7d86-4500-9c29-60e3f1f4185f)
 
 
-More coming soon!
+More updates/ Actual code coming soon!
