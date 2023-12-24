@@ -24,7 +24,10 @@
 - More Sample assets! 🏗️
 - UI Enhancements 😇
 
-### 3D Gaussian Splatting - Render Engine 🧊 First Principles
+### Render Engine - First Principles 🧊
+![FP-RenderEngine](https://github.com/mikejernil/web-render-engine/assets/43872457/b7b7a5aa-57f7-4eff-af0a-70e78ffb3daf)
+
+### 3D Gaussian Splatting through Render Engine - First Principles ✨
 <img width="740" alt="Screenshot 2023-12-09 at 11 32 13 AM" src="https://github.com/mikejernil/renderengine-basics/assets/43872457/9433d151-28d9-4bc6-a08d-f793352788f2">
 
 ## Get Started 📺
@@ -42,7 +45,7 @@ Now you can see the Render Engine running on `http://localhost:5173`. You can na
 
 ### Follow 👥
 - **What The Graphics!** Blog for Simple resources on Computer Graphics ⭐️
-  - LinkedIn - https://www.linkedin.com/company/98858074/
+  - LinkedIn (https://www.linkedin.com/company/98858074/)
 - **Radiance Fields** Blog for anything new on Radiance Fields (NeRFs & Gaussian Splatting!).
   - LinkedIn (https://www.linkedin.com/company/radiancefields/) & Website (www.radiancefields.com)
 - LinkedIn - https://www.linkedin.com/in/michael-jernil/
