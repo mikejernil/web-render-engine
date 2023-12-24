@@ -1,41 +1,47 @@
-# Accompanying Viewer for 3D Gaussian Splatting Blog Post!
+## 🧊 Web Render Engine for 3D Assets - 3D Gaussian Splats & more! ✨
+#### Created by - Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/) as Part of Blog post to be released on www.radiancefields.com 
+#### " Understanding 3D Gaussian Splatting ✨ through the lens of Render Engine - First Principles! " (Link will be added soon.)
 
-# Blog - Understanding 3D Gaussian Splatting through the lens of Render Engine - First Principles!
 
-## Stack: React + TypeScript + Vite
+### Preview
+[scrnli_20_12_2023_17-47-17.webm](https://github.com/mikejernil/renderengine-basics/assets/43872457/21c8923b-b94e-4420-8ef6-fde7d94313ea)
+#### Created w/ `React + TypeScript + Vite` using Libraries - `React Three Fiber + Three.js + luma-web`
 
-## Libraries: React Three Fiber + Three.js + luma-web
+### Features ⭐️
+- View 3D Gaussian Splats generated using Luma AI (https://lumalabs.ai/)
+- View GLB Assets
+- Gizmo for Easy Navigation 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Work in Progress 🚀
+- View **Huge-scale 3D Textured Meshes** (3D Tiles) streamed from cloud (or) local storage
+- View **Huge-scale Point Clouds** (Potree) streamed from cloud (or) local storage
+- Enable Viewing of local/hosted **SPLAT** files
+- Enable Viewing of local/hosted **GLB** files
+- Support for setting up 3D scenes with SPLAT, GLB & other types of 3D assets!
+- More Sample assets! 🏗️
+- UI Enhancements 😇
 
+### 3D Gaussian Splatting - Render Engine 🧊 First Principles
+<img width="740" alt="Screenshot 2023-12-09 at 11 32 13 AM" src="https://github.com/mikejernil/renderengine-basics/assets/43872457/9433d151-28d9-4bc6-a08d-f793352788f2">
+
+## Get Started 📺
+### Clone Repo
+Use `git clone <repo-link>` to clone the repo to your PC
+
+### Install the Packages
 Use `npm i` to install the necessary packages
+
+### Run the 3D Viewer
 Use `npm run dev` to run the viewer in development mode
 
-### Created using create-vite React TS Template
+### Viewer
+Now you can see the Render Engine running on `http://localhost:5173`. You can navigate, interact & play around with the 3D Assets!
 
-Currently, two official plugins are available:
+### Follow 👥
+- **What The Graphics!** Blog for Simple resources on Computer Graphics ⭐️
+  - LinkedIn - https://www.linkedin.com/company/98858074/
+- **Radiance Fields** Blog for anything new on Radiance Fields (NeRFs & Gaussian Splatting!).
+  - LinkedIn (https://www.linkedin.com/company/radiancefields/) & Website (www.radiancefields.com)
+- LinkedIn - https://www.linkedin.com/in/michael-jernil/
+- Twitter/X - https://twitter.com/jernil_dev
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: "latest",
-    sourceType: "module",
-    project: ["./tsconfig.json", "./tsconfig.node.json"],
-    tsconfigRootDir: __dirname,
-  },
-};
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
