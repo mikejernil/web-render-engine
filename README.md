@@ -1,23 +1,26 @@
 ## 🧊 Web Render Engine for 3D Assets - 3D Gaussian Splats & more! ✨
-#### Created by - Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/) as Part of Blog post to be released on www.radiancefields.com 
-#### " Understanding 3D Gaussian Splatting ✨ through the lens of Render Engine - First Principles! " (Link will be added soon.)
+#### Created by: Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/) as Part of a Blog post to be released soon on www.radiancefields.com 
+#### Blog Post: " Understanding 3D Gaussian Splatting ✨ through the lens of Render Engine - First Principles! " (Link will be added on Release)
 
 
 ### Preview
 [scrnli_20_12_2023_17-47-17.webm](https://github.com/mikejernil/renderengine-basics/assets/43872457/21c8923b-b94e-4420-8ef6-fde7d94313ea)
 #### Created w/ `React + TypeScript + Vite` using Libraries - `React Three Fiber + Three.js + luma-web`
 
+#### DISCLAIMER: This Repo is currently a Work-In-Progess (at it's initial stages). More updates will be Coming soon!
+
 ### Features ⭐️
 - View 3D Gaussian Splats generated using Luma AI (https://lumalabs.ai/)
-- View GLB Assets
+- View glTF Assets
 - Gizmo for Easy Navigation 
 
 ### Work in Progress 🚀
 - View **Huge-scale 3D Textured Meshes** (3D Tiles) streamed from cloud (or) local storage
 - View **Huge-scale Point Clouds** (Potree) streamed from cloud (or) local storage
 - Enable Viewing of local/hosted **SPLAT** files
-- Enable Viewing of local/hosted **GLB** files
-- Support for setting up 3D scenes with SPLAT, GLB & other types of 3D assets!
+- Enable Viewing of local/hosted **glTF** files
+- Deployment to Vercel!
+- Support for setting up interactive 3D scenes with SPLAT, glTF & other types of 3D assets in the same space!
 - More Sample assets! 🏗️
 - UI Enhancements 😇
 
