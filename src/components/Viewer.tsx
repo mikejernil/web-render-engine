@@ -82,14 +82,24 @@ const Viewer = ({ viewGS }: { viewGS: boolean }) => {
           <Model position={[0, 0, 0]} rotation={[0, -3.14 / 2, 0]} />
         </Suspense>
       ) : (
-        <lumaSplats
-          semanticsMask={LumaSplatsSemantics.FOREGROUND}
-          source="https://lumalabs.ai/capture/822bac8d-70d6-404e-aaae-f89f46672c67"
-          position={[-1, 0, 0]}
-          scale={1}
-          rotation={[0, -3.14, 0]}
-        />
+        <>
+          <lumaSplats
+            semanticsMask={LumaSplatsSemantics.FOREGROUND}
+            source="https://lumalabs.ai/capture/c0b4eb14-f84b-4869-9bc6-a68f1075ba0f"
+            position={[0, 1, 0]}
+            scale={1}
+            rotation={[0, -3.14, 0]}
+          />
+          <lumaSplats
+            semanticsMask={LumaSplatsSemantics.FOREGROUND}
+            source="https://lumalabs.ai/capture/822bac8d-70d6-404e-aaae-f89f46672c67"
+            position={[-3, 0, 0]}
+            scale={1}
+            rotation={[0, -3.14, 0]}
+          />
+        </>
       )}
+
       <OrbitControls />
     </Canvas>
   );
