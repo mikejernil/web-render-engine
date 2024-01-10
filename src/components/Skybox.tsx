@@ -6,8 +6,6 @@ import { Sky } from "three/examples/jsm/objects/Sky";
 extend({ Sky });
 
 const HDRISky = () => {
-  /* eslint-disable-next-line  */
-  //@ts-ignore
   const texture = useLoader(
     RGBELoader,
     "/assets/kloofendal_28d_misty_puresky_2k.hdr"
@@ -40,6 +38,8 @@ const ShaderSky = () => {
   const theta = MathUtils.degToRad(azimuth);
 
   sun.setFromSphericalCoords(1, phi, theta);
+
+  //@ts-expect-error undefined type error sky from drei
   return <sky />;
 };
 
