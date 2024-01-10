@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Button, Divider, Flex, Space, Tooltip } from "antd";
+import { Button, Flex, Tooltip } from "antd";
 import "./App.css";
 import Viewer from "./components/Viewer";
 import { Typography } from "antd";
+import Socials from "./components/Socials";
 
 function App() {
   const [viewGS, setViewGS] = useState(false);
 
-  const { Link, Title } = Typography;
+  const { Title } = Typography;
 
   return (
     <>
@@ -44,27 +45,8 @@ function App() {
       <div style={{ background: "white", width: "100vw", height: "100vh" }}>
         <Viewer viewGS={viewGS} />
       </div>
-      <div style={{ position: "absolute", top: 1, right: 25, zIndex: 2 }}>
-        {/* <Flex vertical> */}
-        <Title style={{ opacity: 0.5, userSelect: "none" }} level={5}>
-          Michael Jernil
-        </Title>
-        <Space split={<Divider type="vertical" />}>
-          <Link
-            href="https://www.linkedin.com/in/michael-jernil/"
-            target="_blank"
-          >
-            LinkedIn
-          </Link>
-          <Link href="https://github.com/mikejernil" target="_blank">
-            GitHub
-          </Link>
-          <Link href="https://twitter.com/jernil_dev" target="_blank">
-            X
-          </Link>
-        </Space>
-        {/* </Flex> */}
-      </div>
+      {/* You can throw this section away for your own projects! */}
+      <Socials />
     </>
   );
 }
