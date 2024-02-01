@@ -26,10 +26,12 @@
 - UI Enhancements 😇
 
 ### Render Engine - First Principles 🧊
-![FP-RenderEngine](https://github.com/mikejernil/web-render-engine/assets/43872457/b7b7a5aa-57f7-4eff-af0a-70e78ffb3daf)
+<img width="855" alt="Screenshot 2024-02-01 at 12 07 41 PM" src="https://github.com/mikejernil/web-render-engine/assets/43872457/71404259-71a3-4aa2-be08-3f174e5c1cda">
+
 
 ### 3D Gaussian Splatting through Render Engine - First Principles ✨
-<img width="740" alt="Screenshot 2023-12-09 at 11 32 13 AM" src="https://github.com/mikejernil/renderengine-basics/assets/43872457/9433d151-28d9-4bc6-a08d-f793352788f2">
+<img width="855" alt="Screenshot 2024-02-01 at 12 16 41 PM" src="https://github.com/mikejernil/web-render-engine/assets/43872457/8c19c7dd-9253-43c9-a45d-0a3fc80a2c2d">
+
 
 With the latest advancements in Computer Graphics, there is a new Pandora's box that has been opened called - **'3D Gaussian Splatting'**. It works on the concept that real world scenes could be efficiently represented as 3D Gaussian Splats (3DGS) - as an alternative to Traditional Mesh representation which involves - Mesh, Textures, Lighting etc.
 
