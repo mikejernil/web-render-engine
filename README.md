@@ -1,6 +1,7 @@
 ## 🧊 Web Render Engine for 3D Assets - 3D Gaussian Splats & more! ✨
-#### Created by: Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/) as Part of a Blog post to be released soon on www.radiancefields.com 
-#### Blog Post: " Understanding 3D Gaussian Splatting ✨ through the lens of Render Engine - First Principles! " (Link will be added on Release)
+#### Created by: Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/)
+#### For Blog Post "3D Gaussian Splatting ✨ via Render Engines" 
+#### Check it out @ https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
 
 ### Demo
 #### https://webrenderengine.vercel.app/
