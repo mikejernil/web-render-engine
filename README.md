@@ -5,7 +5,10 @@
 
 ### Demo
 #### https://webrenderengine.vercel.app/
-[scrnli_20_12_2023_17-47-17.webm](https://github.com/mikejernil/renderengine-basics/assets/43872457/21c8923b-b94e-4420-8ef6-fde7d94313ea)
+
+https://github.com/mikejernil/web-render-engine/assets/43872457/a0345fd9-fdb0-4452-a42a-af04e891d5dd
+
+Example Hosted Splat Url - https://huggingface.co/cakewalk/splat-data/resolve/main/nike.splat
 
 #### Created w/ `React + TypeScript + Vite` using Libraries - `React Three Fiber + Three.js + luma-web`
 
@@ -14,6 +17,7 @@
 ### Features ⭐️
 - View 3D Gaussian Splats generated using Luma AI (https://lumalabs.ai/)
 - View glTF Assets
+- Gizmo transform controls & Base grid
 - Gizmo for Easy Navigation
 - Deployed Vercel App
 
