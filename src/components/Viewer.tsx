@@ -19,7 +19,7 @@ import {
   Grid,
 } from "@react-three/drei";
 
-import { LumaSplatsThree, LumaSplatsSemantics } from "@lumaai/luma-web";
+import { LumaSplatsThree } from "@lumaai/luma-web";
 import Skybox from "./Skybox";
 
 // Make LumaSplatsThree available to R3F
