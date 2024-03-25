@@ -1,10 +1,11 @@
 ## 🧊 Web Render Engine for 3D Assets - 3D Gaussian Splats & more! ✨
 
-#### Created by: Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/) as Part of a Blog post to be released soon on www.radiancefields.com
+#### Created by: Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/)
+#### For Blog Post "Understanding 3D Gaussian Splatting ✨ via Render Engines" 
+#### Check it out @ https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
 
-#### Blog Post: " Understanding 3D Gaussian Splatting ✨ through the lens of Render Engine - First Principles! " (Link will be added on Release)
-
-### Preview
+### Demo
+#### https://webrenderengine.vercel.app/
 
 [scrnli_20_12_2023_17-47-17.webm](https://github.com/mikejernil/renderengine-basics/assets/43872457/21c8923b-b94e-4420-8ef6-fde7d94313ea)
 
@@ -17,24 +18,23 @@
 - View any 3D Gaussian Splat(.splat) with URL
 - View glTF Assets
 - Gizmo for Easy Navigation
+- Deployed Vercel App
 
 ### Work in Progress 🚀
 
 - View **Huge-scale 3D Textured Meshes** (3D Tiles) streamed from cloud (or) local storage
 - View **Huge-scale Point Clouds** (Potree) streamed from cloud (or) local storage
 - Enable Viewing of local/hosted **glTF** files
-- Deployment to Vercel!
 - Support for setting up interactive 3D scenes with SPLAT, glTF & other types of 3D assets in the same space!
 - More Sample assets! 🏗️
 - UI Enhancements 😇
 
 ### Render Engine - First Principles 🧊
 
-![FP-RenderEngine](https://github.com/mikejernil/web-render-engine/assets/43872457/b7b7a5aa-57f7-4eff-af0a-70e78ffb3daf)
+<img width="855" alt="Screenshot 2024-02-01 at 12 07 41 PM" src="https://github.com/mikejernil/web-render-engine/assets/43872457/71404259-71a3-4aa2-be08-3f174e5c1cda">
 
 ### 3D Gaussian Splatting through Render Engine - First Principles ✨
-
-<img width="740" alt="Screenshot 2023-12-09 at 11 32 13 AM" src="https://github.com/mikejernil/renderengine-basics/assets/43872457/9433d151-28d9-4bc6-a08d-f793352788f2">
+<img width="855" alt="Screenshot 2024-02-01 at 12 16 41 PM" src="https://github.com/mikejernil/web-render-engine/assets/43872457/8c19c7dd-9253-43c9-a45d-0a3fc80a2c2d">
 
 With the latest advancements in Computer Graphics, there is a new Pandora's box that has been opened called - **'3D Gaussian Splatting'**. It works on the concept that real world scenes could be efficiently represented as 3D Gaussian Splats (3DGS) - as an alternative to Traditional Mesh representation which involves - Mesh, Textures, Lighting etc.
 
