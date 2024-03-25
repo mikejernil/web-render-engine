@@ -6,10 +6,10 @@ const Socials = () => {
   return (
     <div
       id="jernil-socials"
-      style={{ position: "absolute", top: 1, right: 25, zIndex: 2 }}
+      style={{ position: "absolute", bottom: 25, left: 25, zIndex: 2 }}
     >
       <Flex vertical>
-        <Title style={{ opacity: 0.5, userSelect: "none" }} level={5}>
+        <Title style={{ opacity: 0.6, userSelect: "none" }} level={5}>
           Michael Jernil
         </Title>
         <Link href="https://www.3denginerd.com/" target="_blank">

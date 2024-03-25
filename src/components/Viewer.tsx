@@ -10,7 +10,14 @@ import {
 import { Suspense } from "react";
 //ts-ignore
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import { OrbitControls, GizmoHelper, GizmoViewport } from "@react-three/drei";
+import {
+  Splat,
+  OrbitControls,
+  GizmoHelper,
+  GizmoViewport,
+  TransformControls,
+  Grid,
+} from "@react-three/drei";
 
 import { LumaSplatsThree, LumaSplatsSemantics } from "@lumaai/luma-web";
 import Skybox from "./Skybox";
@@ -57,7 +64,15 @@ function Model(props: ModelProps) {
   return <primitive {...props} object={result.scene} />;
 }
 
-const Viewer = ({ viewGS }: { viewGS: boolean }) => {
+const Viewer = ({
+  viewGS,
+  url,
+  load,
+}: {
+  viewGS: boolean;
+  url: string;
+  load: boolean;
+}) => {
   return (
     <Canvas>
       <GizmoHelper
@@ -70,26 +85,35 @@ const Viewer = ({ viewGS }: { viewGS: boolean }) => {
           labelColor="black"
         />
       </GizmoHelper>
+      <Grid infiniteGrid />
       <Skybox type="HDRI" />
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
-      {!viewGS ? (
+      {!viewGS && (
         <Suspense fallback={<Box position={[0, 0, 0]} />}>
-          <Model position={[0, 0, 0]} rotation={[0, -3.14 / 2, 0]} />
+          <TransformControls mode="translate">
+            <Model position={[0, 0, 0]} rotation={[0, -3.14 / 2, 0]} />
+          </TransformControls>
         </Suspense>
-      ) : (
-        <>
-          <lumaSplats
-            semanticsMask={LumaSplatsSemantics.FOREGROUND}
-            source="https://lumalabs.ai/capture/822bac8d-70d6-404e-aaae-f89f46672c67"
-            position={[-1, 0, 0]}
-            scale={1}
-            rotation={[0, -3.14, 0]}
-          />
-        </>
       )}
+      {
+        viewGS && load && url && (
+          <Suspense fallback={<Box position={[0, 0, 0]} />}>
+            <TransformControls mode="translate">
+              <Splat alphaTest={0.1} position={[0, 0, 0]} src={url} />
+            </TransformControls>
+          </Suspense>
+        )
+        // {/* <><lumaSplats
+        //   semanticsMask={LumaSplatsSemantics.FOREGROUND}
+        //   source="https://lumalabs.ai/capture/822bac8d-70d6-404e-aaae-f89f46672c67"
+        //   position={[-1, 0, 0]}
+        //   scale={1}
+        //   rotation={[0, -3.14, 0]}
+        // /> </> */}
+      }
 
-      <OrbitControls />
+      <OrbitControls makeDefault />
     </Canvas>
   );
 };
