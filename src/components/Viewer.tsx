@@ -81,11 +81,11 @@ const Viewer = ({
         renderPriority={1}
       >
         <GizmoViewport
-          axisColors={["grey", "grey", "grey"]}
+          axisColors={["#8ca6db ", "#8ca6db ", "#8ca6db "]}
           labelColor="black"
         />
       </GizmoHelper>
-      <Grid infiniteGrid />
+      <Grid infiniteGrid fadeDistance={25} sectionColor={"darkgrey"} />
       <Skybox type="HDRI" />
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
@@ -112,7 +112,6 @@ const Viewer = ({
         //   rotation={[0, -3.14, 0]}
         // /> </> */}
       }
-
       <OrbitControls makeDefault />
     </Canvas>
   );
