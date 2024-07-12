@@ -27,7 +27,7 @@ function App() {
             className="btn-grad"
             size="large"
             onClick={() => setViewGS(true)}
-            type="secondary"
+            type={undefined}
           >
             <PlusCircleOutlined />
             {"Load Splat model"}
