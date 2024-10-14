@@ -1,17 +1,18 @@
-## 🧊 Web Render Engine for 3D Assets - 3D Gaussian Splats & more! ✨
+# 🧊 Web Render Engine
+#### Created w/ `React + TypeScript + Vite` using Libraries - `React Three Fiber + Three.js + drei`
 
-#### Created by: Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/)
-#### For Blog Post "Understanding 3D Gaussian Splatting ✨ via Render Engines" 
-#### Check it out @ https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
+Created by Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/)
+
+For Blog post (link) - https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
 
 ### Demo
-#### https://webrenderengine.vercel.app/
+Hosted at https://webrenderengine.vercel.app/
 
 https://github.com/mikejernil/web-render-engine/assets/43872457/a0345fd9-fdb0-4452-a42a-af04e891d5dd
 
 Example Hosted Splat Url - https://huggingface.co/cakewalk/splat-data/resolve/main/nike.splat
 
-#### Created w/ `React + TypeScript + Vite` using Libraries - `React Three Fiber + Three.js + luma-web`
+
 
 #### DISCLAIMER: This Repo is currently a Work-In-Progess (at it's initial stages). More updates will be Coming soon!
 
