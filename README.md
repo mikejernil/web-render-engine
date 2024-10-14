@@ -23,14 +23,17 @@ Example Hosted Splat Url - https://huggingface.co/cakewalk/splat-data/resolve/ma
 - Gizmo for Easy Navigation
 - Deployed Vercel App
 
-### Work in Progress 🚀
-
-- View **Huge-scale 3D Textured Meshes** (3D Tiles) streamed from cloud (or) local storage
-- View **Huge-scale Point Clouds** (Potree) streamed from cloud (or) local storage
-- Enable Viewing of local/hosted **glTF** files
-- Support for setting up interactive 3D scenes with SPLAT, glTF & other types of 3D assets in the same space!
-- More Sample assets! 🏗️
-- UI Enhancements 😇
+### Features we are looking to build 🚀
+- glTF loading (Local or URL)
+- Dynamic Skybox (Day/Night/Indoor UI selector) 
+- SPLAT loading (Local)
+- USD loading (Local)
+- Sample assets
+- Snapshot feature
+- Object selection & metadata panel (name, TRS etc.)
+- Scene editor
+- View dependent loading
+- Add Lights
 
 ### Render Engine - First Principles 🧊
 
