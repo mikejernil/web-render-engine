@@ -8,10 +8,9 @@ For Blog post (link) - https://radiancefields.com/understanding-3d-gaussian-spla
 ### Demo
 Hosted at https://webrenderengine.vercel.app/
 
-https://github.com/mikejernil/web-render-engine/assets/43872457/a0345fd9-fdb0-4452-a42a-af04e891d5dd
+https://github.com/user-attachments/assets/6ad047ff-cadd-4057-9ad0-a687cf1e0013
 
 Example Hosted Splat Url - https://huggingface.co/cakewalk/splat-data/resolve/main/nike.splat
-
 
 
 #### DISCLAIMER: This Repo is currently a Work-In-Progess (at it's initial stages). More updates will be Coming soon!
