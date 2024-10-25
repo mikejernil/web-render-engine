@@ -12,27 +12,3 @@
 Link {
   background-color: red;
 }
-.btn-grad {
-  background-image: linear-gradient(
-    to right,
-    #b993d6 0%,
-    #8ca6db 51%,
-    #b993d6 100%
-  );
-  padding: 15px 45px;
-  text-align: center;
-  text-transform: uppercase;
-  transition: 0.5s;
-  background-size: 200% auto;
-  color: white;
-  box-shadow: 0 0 20px #eee;
-  border-radius: 10px;
-  display: block;
-  font-weight: 600;
-}
-
-.btn-grad:hover {
-  background-position: right center; /* change the direction of the change here */
-  color: #fff;
-  text-decoration: none;
-}
