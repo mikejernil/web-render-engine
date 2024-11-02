@@ -1,7 +1,7 @@
-import { Suspense, useState } from 'react';
+import React, { Suspense } from 'react';
 
-//ts-ignore
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 import {
     GizmoHelper,
@@ -11,73 +11,115 @@ import {
     Splat,
     TransformControls,
 } from '@react-three/drei';
-import { Canvas, MeshProps, useLoader } from '@react-three/fiber';
+import { Canvas, useLoader } from '@react-three/fiber';
 
+import { useTheme } from '../context/ThemeContext';
 import Skybox from './Skybox';
 
-function Box(props: MeshProps) {
-    // Set up state for the hovered and active state
-    const [hovered, setHover] = useState(false);
-    const [active, setActive] = useState(false);
+interface Model {
+    url: string;
+    name: string;
+    type: 'splat' | 'obj' | 'fbx';
+}
 
-    // Return view, these are regular three.js elements expressed in JSX
+interface ViewerProps {
+    models: Model[];
+    canvasRef: React.RefObject<HTMLCanvasElement>;
+}
+
+const Viewer: React.FC<ViewerProps> = ({ models, canvasRef }) => {
+    const { theme } = useTheme();
+
     return (
-        <mesh
-            {...props}
-            scale={active ? 1.5 : 1}
-            onClick={() => setActive(!active)}
-            onPointerOver={() => setHover(true)}
-            onPointerOut={() => setHover(false)}
+        <Canvas
+            ref={canvasRef}
+            style={{
+                width: '100vw',
+                height: '100vh',
+            }}
+            gl={{ preserveDrawingBuffer: true }}
+            camera={{ position: [0, 2, 4] }}
         >
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color={hovered ? 'hotpink' : 'orange'} />
-        </mesh>
-    );
-}
-
-type ModelProps = {
-    position: [number, number, number];
-    rotation: [number, number, number];
-};
-
-function Model(props: ModelProps) {
-    const result = useLoader(GLTFLoader, '/assets/duck_model.glb');
-    // You don't need to check for the presence of the result, when we're here
-    // the result is guaranteed to be present since useLoader suspends the component
-    return <primitive {...props} object={result.scene} />;
-}
-
-const Viewer = ({ viewGS, url, load }: { viewGS: boolean; url: string; load: boolean }) => {
-    return (
-        <Canvas>
-            <GizmoHelper
-                alignment="bottom-right" // widget alignment within scene
-                margin={[80, 80]} // widget margins (X, Y)
-                renderPriority={1}
-            >
-                <GizmoViewport axisColors={['#8ca6db', '#8ca6db', '#8ca6db']} labelColor="black" />
+            <ambientLight />
+            {models.map((model, index) => (
+                <Models key={index} model={model} />
+            ))}
+            <GizmoHelper alignment="bottom-right" margin={[60, 60]} renderPriority={1}>
+                <GizmoViewport
+                    axisColors={
+                        theme === 'dark' ? ['#fff', '#fff', '#fff'] : ['#000', '#000', '#000']
+                    }
+                    labelColor={theme === 'dark' ? 'black' : 'white'}
+                />
             </GizmoHelper>
-            <Grid infiniteGrid fadeDistance={25} sectionColor={'darkgrey'} />
+            <Grid
+                position={[0, 0.01, 0]}
+                args={[10, 10]}
+                cellSize={0.5}
+                cellThickness={0.5}
+                cellColor={theme === 'light' ? '#333' : '#ddd'}
+                sectionSize={5}
+                sectionThickness={1.5}
+                sectionColor={theme === 'light' ? '#333' : '#ddd'}
+                fadeDistance={25}
+                fadeStrength={2}
+                followCamera={false}
+                infiniteGrid={true}
+            />
             <Skybox type="HDRI" />
             <ambientLight />
             <pointLight position={[10, 10, 10]} />
-            {!viewGS && (
-                <Suspense fallback={<Box position={[0, 0, 0]} />}>
-                    <TransformControls mode="translate">
-                        <Model position={[0, 0, 0]} rotation={[0, -3.14 / 2, 0]} />
-                    </TransformControls>
-                </Suspense>
-            )}
-            {viewGS && load && url && (
-                <Suspense fallback={<Box position={[0, 0, 0]} />}>
-                    <TransformControls mode="translate">
-                        <Splat alphaTest={0.1} position={[0, 0, 0]} src={url} />
-                    </TransformControls>
-                </Suspense>
-            )}
-            <OrbitControls makeDefault />
+            <OrbitControls
+                makeDefault
+                maxPolarAngle={Math.PI / 1.6}
+                minDistance={1}
+                maxDistance={30}
+                enablePan={true}
+            />
         </Canvas>
     );
 };
 
 export default Viewer;
+
+function Box() {
+    return (
+        <mesh>
+            <boxGeometry />
+            <meshStandardMaterial />
+        </mesh>
+    );
+}
+
+// FBX Model component
+function FbxModel({ url }: { url: string }) {
+    const fbx = useLoader(FBXLoader, url);
+    return <primitive object={fbx} />;
+}
+
+// OBJ Model component
+function ObjModel({ url }: { url: string }) {
+    const obj = useLoader(OBJLoader, url);
+    return <primitive object={obj} />;
+}
+function Models({ model }: { model: Model }) {
+    return (
+        <Suspense fallback={<Box />}>
+            {model.type === 'splat' && (
+                <TransformControls mode="translate">
+                    <Splat alphaTest={0.1} position={[0, 0, 0]} src={model.url} />
+                </TransformControls>
+            )}
+            {model.type === 'fbx' && (
+                <TransformControls mode="translate">
+                    <FbxModel url={model.url} />
+                </TransformControls>
+            )}
+            {model.type === 'obj' && (
+                <TransformControls mode="translate">
+                    <ObjModel url={model.url} />
+                </TransformControls>
+            )}
+        </Suspense>
+    );
+}
