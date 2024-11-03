@@ -1,0 +1,14 @@
+#root {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.app-title {
+  background: -webkit-linear-gradient(#b993d6 0%, #596a8c 51%, #685278 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+Link {
+  background-color: red;
+}
