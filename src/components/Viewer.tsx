@@ -91,7 +91,7 @@ function Box() {
     );
 }
 
-// FBX Model component
+// FBX Model component - YES
 function FbxModel({ url }: { url: string }) {
     const fbx = useLoader(FBXLoader, url);
     return <primitive object={fbx} />;
