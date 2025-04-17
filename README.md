@@ -18,7 +18,7 @@ Example Hosted Splat Url - https://huggingface.co/cakewalk/splat-data/resolve/ma
 
 ### Features ⭐️
 
--   Load with URL use Local file upload
+-   Load 3D assets with URL (or) from device
 -   Supported fromats : Object File Format (**Obj**.), Surface Splatting (**Splat**.), Filmbox (**Fbx**.), GL Transmission Format Binary (**Glb**.)
 -   Sample assets :
     -   Splat: Shoe ,Plush
