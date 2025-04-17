@@ -12,7 +12,6 @@ import { useTheme } from './context/ThemeContext';
 function App() {
     const [viewGS, setViewGS] = useState(false);
     const [url, setUrl] = useState('');
-    const [load, setLoad] = useState(false);
     const [sampleFileView, setSampleFileView] = useState(false);
 
     const [models, setModels] = useState<
@@ -27,7 +26,7 @@ function App() {
         const file = event.target.files?.[0];
         if (file) {
             const fileUrl = URL.createObjectURL(file);
-            let type: 'splat' | 'obj' | 'fbx' | 'glb' = 'obj';
+            let type: 'splat' | 'obj' | 'fbx' | 'glb' | null = null;
 
             if (file.name.endsWith('.splat')) type = 'splat';
             else if (file.name.endsWith('.fbx')) type = 'fbx';
@@ -52,6 +51,27 @@ function App() {
 
         setUrl(sampleUrl);
         setModels([...models, { url: sampleUrl, name: sampleUrl.split('/').pop() ?? '', type }]);
+    };
+
+    const loadFromUrl = () => {
+        if (!url.trim()) {
+            alert('Please enter a URL.');
+            return;
+        }
+
+        let type: 'splat' | 'obj' | 'fbx' | 'glb' | null = null;
+
+        if (url.endsWith('.splat')) type = 'splat';
+        else if (url.endsWith('.fbx')) type = 'fbx';
+        else if (url.endsWith('.obj')) type = 'obj';
+        else if (url.endsWith('.glb')) type = 'glb';
+        else
+            return alert(
+                'Unsupported file format in URL. Only .splat, .fbx, .obj, .glb are supported.',
+            );
+
+        setModels([...models, { url, name: url.split('/').pop() ?? '', type }]);
+        setUrl(''); // clear after loading
     };
 
     const { theme } = useTheme();
@@ -131,7 +151,7 @@ function App() {
                                     />
                                     <div
                                         className={`h-10 w-20 p-2 gap-2 flex items-center justify-center rounded-md backdrop-blur-md cursor-pointer select-none ${theme == 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
-                                        onClick={() => setLoad(true)}
+                                        onClick={loadFromUrl}
                                     >
                                         <CloudUploadOutlined />
                                         {'Load '}
@@ -165,11 +185,11 @@ function App() {
 }
 
 export default App;
-// Add this function component at the top or in a separate file
+
 function OrLine() {
     const { theme } = useTheme();
     return (
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center my-1">
             <div
                 className={`flex-grow h-[.1rem] mx-2 backdrop-blur-md ${
                     theme == 'light' ? 'bg-black/50' : 'bg-white/50'
