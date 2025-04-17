@@ -24,7 +24,7 @@ function App() {
             }
             return [...prevModels, newModel];
         });
-    }, []); // No dependencies, setModels state updater form ensures safety
+    }, []);
 
     return (
         <>
