@@ -6,25 +6,22 @@ const ThemeSwitch: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
 
     return (
-        <div
-            className={`backdrop-blur-md my-1 relative w-16 h-8 rounded-full border-2 flex items-center ${
-                theme === 'light' ? ' bg-white/10 border-black/10' : ' bg-black/10 border-white/10'
-            }`}
+        <button
             onClick={toggleTheme}
+            className={`relative w-16 h-9 flex items-center rounded-full transition-colors duration-300 focus:outline-none
+            ${theme === 'light' ? 'bg-black/20' : 'bg-white/20'}`}
         >
-            <div className="absolute left-2   text-white">
-                <FaRegSun size={16} />
-            </div>
-            <div className="absolute right-2  text-black">
-                <FaRegMoon size={16} />
-            </div>
-
             <div
-                className={`border-2 border-black/10 absolute w-6 h-6 rounded-full bg-white  transition-transform duration-300 cursor-pointer flex items-center justify-center ${
-                    theme === 'light' ? 'translate-x-1 bg-white' : 'translate-x-8 bg-black'
-                }`}
-            />
-        </div>
+                className={`absolute w-7 h-7 bg-black/50 rounded-full transition-transform duration-300 ease-in-out flex items-center justify-center
+                ${theme === 'light' ? 'translate-x-1' : 'translate-x-8'}`}
+            >
+                {theme === 'light' ? (
+                    <FaRegSun className="text-white" size={16} />
+                ) : (
+                    <FaRegMoon className="text-white" size={16} />
+                )}
+            </div>
+        </button>
     );
 };
 
