@@ -1,4 +1,5 @@
 # 🧊 Web Render Engine
+
 #### Created w/ `React + TypeScript + Vite` using Libraries - `React Three Fiber + Three.js + drei`
 
 Created by Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/)
@@ -6,40 +7,45 @@ Created by Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linked
 For Blog post (link) - https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
 
 ### Demo
+
 Hosted at https://webrenderengine.vercel.app/
 
-https://github.com/user-attachments/assets/6ad047ff-cadd-4057-9ad0-a687cf1e0013
+https://github.com/user-attachments/assets/679d746a-6798-41c4-96a1-58e8a402f165
 
 Example Hosted Splat Url - https://huggingface.co/cakewalk/splat-data/resolve/main/nike.splat
-
 
 #### DISCLAIMER: This Repo is currently a Work-In-Progess (at it's initial stages). More updates will be Coming soon!
 
 ### Features ⭐️
 
-- View any 3D Gaussian Splat(.splat) with URL
-- View glTF Assets
-- Gizmo transform controls & Base grid
-- Gizmo for Easy Navigation
-- Deployed Vercel App
+-   Load 3D assets with URL (or) from device
+-   Supported fromats : Object File Format (**Obj**.), Surface Splatting (**Splat**.), Filmbox (**Fbx**.), GL Transmission Format Binary (**Glb**.)
+-   Sample assets :
+    -   Splat: Shoe ,Plush
+    -   Obj: Chair ,Fox
+    -   Fbx: Imposter ,Mazda
+    -   Glb: Pikachu ,Duck
+-   Gizmo transform controls & Base grid
+-   Snapshot feature
+-   Dynamic Skybox (Day/Night)
+-   Gizmo for Easy Navigation
+-   Deployed Vercel App
 
 ### Features we are looking to build 🚀
-- glTF loading (Local or URL)
-- Dynamic Skybox (Day/Night/Indoor UI selector) 
-- SPLAT loading (Local)
-- USD loading (Local)
-- Sample assets
-- Snapshot feature
-- Object selection & metadata panel (name, TRS etc.)
-- Scene editor
-- View dependent loading
-- Add Lights
+
+-   USD loading (Local)
+-   Object selection & metadata panel (name, TRS etc.)
+-   Scene editor
+-   Objets Outliner
+-   View dependent loading
+-   Add Lights
 
 ### Render Engine - First Principles 🧊
 
 <img width="855" alt="Screenshot 2024-02-01 at 12 07 41 PM" src="https://github.com/mikejernil/web-render-engine/assets/43872457/71404259-71a3-4aa2-be08-3f174e5c1cda">
 
 ### 3D Gaussian Splatting through Render Engine - First Principles ✨
+
 <img width="855" alt="Screenshot 2024-02-01 at 12 16 41 PM" src="https://github.com/mikejernil/web-render-engine/assets/43872457/8c19c7dd-9253-43c9-a45d-0a3fc80a2c2d">
 
 With the latest advancements in Computer Graphics, there is a new Pandora's box that has been opened called - **'3D Gaussian Splatting'**. It works on the concept that real world scenes could be efficiently represented as 3D Gaussian Splats (3DGS) - as an alternative to Traditional Mesh representation which involves - Mesh, Textures, Lighting etc.
@@ -66,9 +72,9 @@ Now you can see the Render Engine running on `http://localhost:5173`. You can na
 
 ### Follow 👥
 
-- **What The Graphics!** Blog for Simple resources on Computer Graphics ⭐️
-  - LinkedIn (https://www.linkedin.com/company/98858074/)
-- **Radiance Fields** Blog for anything new on Radiance Fields (NeRFs & Gaussian Splatting!).
-  - LinkedIn (https://www.linkedin.com/company/radiancefields/) & Website (www.radiancefields.com)
-- LinkedIn - https://www.linkedin.com/in/michael-jernil/
-- Twitter/X - https://twitter.com/jernil_dev
+-   **What The Graphics!** Blog for Simple resources on Computer Graphics ⭐️
+    -   LinkedIn (https://www.linkedin.com/company/98858074/)
+-   **Radiance Fields** Blog for anything new on Radiance Fields (NeRFs & Gaussian Splatting!).
+    -   LinkedIn (https://www.linkedin.com/company/radiancefields/) & Website (www.radiancefields.com)
+-   LinkedIn - https://www.linkedin.com/in/michael-jernil/
+-   Twitter/X - https://twitter.com/jernil_dev

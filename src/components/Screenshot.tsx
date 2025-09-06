@@ -1,35 +1,53 @@
-// Screenshot.tsx
-import React from 'react';
+import React, { useCallback } from 'react';
+import { FaCamera } from 'react-icons/fa';
+
+import { useTheme } from '../context/ThemeContext';
 
 interface ScreenshotProps {
     canvasRef: React.RefObject<HTMLCanvasElement>;
-    theme: 'dark' | 'light';
+    setShowHelpers: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Screenshot: React.FC<ScreenshotProps> = ({ canvasRef, theme }) => {
-    const takeScreenshot = () => {
+const Screenshot: React.FC<ScreenshotProps> = ({ canvasRef, setShowHelpers }) => {
+    const { theme } = useTheme();
+
+    const takeScreenshot = useCallback(() => {
         if (!canvasRef.current) return;
 
-        const canvas = canvasRef.current;
-        canvas.toBlob((blob) => {
-            if (blob) {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'canvas-screenshot.png';
-                link.click();
-                URL.revokeObjectURL(url);
+        setShowHelpers(false);
+
+        setTimeout(() => {
+            const canvas = canvasRef.current;
+            if (canvas) {
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'webrender-screenshot.png';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }
+                }, 'image/png');
             }
-        }, 'image/png');
-    };
+            setShowHelpers(true);
+        }, 100);
+    }, [canvasRef, setShowHelpers]);
 
     return (
-        <div
-            className={`p-2 rounded-md backdrop-blur-md cursor-pointer select-none ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
+        <button
+            className={`p-3 rounded-lg backdrop-blur-md cursor-pointer select-none transition-colors ${
+                theme === 'dark'
+                    ? 'bg-white/10 text-white hover:bg-white/20'
+                    : 'bg-black/10 text-black hover:bg-black/20'
+            }`}
             onClick={takeScreenshot}
+            aria-label="Take Screenshot"
         >
-            Screenshot
-        </div>
+            <FaCamera />
+        </button>
     );
 };
 

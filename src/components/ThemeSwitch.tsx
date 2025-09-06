@@ -2,19 +2,26 @@ import { FaRegMoon, FaRegSun } from 'react-icons/fa';
 
 import { useTheme } from '../context/ThemeContext';
 
-const ThemeSwitch = () => {
+const ThemeSwitch: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
 
     return (
-        <div>
+        <button
+            onClick={toggleTheme}
+            className={`relative w-16 h-9 flex items-center rounded-full transition-colors duration-300 focus:outline-none
+            ${theme === 'light' ? 'bg-black/20' : 'bg-white/20'}`}
+        >
             <div
-                className={`p-3 rounded-md backdrop-blur-md ${theme == 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
-                onClick={toggleTheme}
+                className={`absolute w-7 h-7 bg-black/50 rounded-full transition-transform duration-300 ease-in-out flex items-center justify-center
+                ${theme === 'light' ? 'translate-x-1' : 'translate-x-8'}`}
             >
-                {theme == 'light' && <FaRegSun />}
-                {theme == 'dark' && <FaRegMoon />}
+                {theme === 'light' ? (
+                    <FaRegSun className="text-white" size={16} />
+                ) : (
+                    <FaRegMoon className="text-white" size={16} />
+                )}
             </div>
-        </div>
+        </button>
     );
 };
 
