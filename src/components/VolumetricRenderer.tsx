@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+
 import * as THREE from 'three';
+
+import { useFrame } from '@react-three/fiber';
 
 const DIMENSION = 256;
 const VOXEL_COUNT = DIMENSION * DIMENSION * DIMENSION;
@@ -30,8 +32,7 @@ const fragmentShader = `
     layout(location = 0) out vec4 FragColor;
 
     void main() {
-        // Kept as in the original renderer. Its output initialization is commented out.
-        // FragColor = vec4(0.0);
+        FragColor = vec4(0.0);
 
         vec3 dataPosition = oTexCoords;
         vec3 geometryDirection = normalize((oTexCoords - vec3(0.5)) - u_cameraPosition);
@@ -54,84 +55,75 @@ const fragmentShader = `
     }
 `;
 
-export interface RawVolumeRendererProps {
-  /** Raw, one-byte-per-voxel data for the existing 256³ volume format. */
-  volumeData: Uint8Array | null;
+interface VolumetricRendererProps {
+    volumeData: Uint8Array | null;
 }
 
-/**
- * R3F-compatible wrapper for the existing raw-volume shader.
- * Render this inside an existing <Canvas>; it does not create a Canvas,
- * renderer, camera, controls, lights, or a render loop.
- */
-export function RawVolumeRenderer({ volumeData }: RawVolumeRendererProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
-  const cameraPosition = useMemo(() => new THREE.Vector3(), []);
+const VolumetricRenderer = ({ volumeData }: VolumetricRendererProps) => {
+    const meshRef = useRef<THREE.Mesh>(null);
+    const materialRef = useRef<THREE.ShaderMaterial>(null);
+    const cameraPosition = useMemo(() => new THREE.Vector3(), []);
 
-  const texture = useMemo(() => {
-    if (!volumeData) return null;
+    const texture = useMemo(() => {
+        if (!volumeData) return null;
 
-    // Preserve the original loader's behavior: copy into a fixed 256³ buffer,
-    // truncating excess bytes and leaving missing bytes as zeroes.
-    const data = new Uint8Array(VOXEL_COUNT);
-    data.set(volumeData.subarray(0, VOXEL_COUNT));
+        // fixed 256^3 buffer: extra bytes are cut off, missing bytes stay zero
+        const data = new Uint8Array(VOXEL_COUNT);
+        data.set(volumeData.subarray(0, VOXEL_COUNT));
 
-    const result = new THREE.Data3DTexture(data, DIMENSION, DIMENSION, DIMENSION);
-    result.format = THREE.RedFormat;
-    result.type = THREE.UnsignedByteType;
-    result.minFilter = THREE.LinearFilter;
-    result.magFilter = THREE.LinearFilter;
-    result.wrapS = THREE.ClampToEdgeWrapping;
-    result.wrapT = THREE.ClampToEdgeWrapping;
-    result.wrapR = THREE.ClampToEdgeWrapping;
-    result.needsUpdate = true;
+        const result = new THREE.Data3DTexture(data, DIMENSION, DIMENSION, DIMENSION);
+        result.format = THREE.RedFormat;
+        result.type = THREE.UnsignedByteType;
+        result.minFilter = THREE.LinearFilter;
+        result.magFilter = THREE.LinearFilter;
+        result.wrapS = THREE.ClampToEdgeWrapping;
+        result.wrapT = THREE.ClampToEdgeWrapping;
+        result.wrapR = THREE.ClampToEdgeWrapping;
+        result.needsUpdate = true;
 
-    return result;
-  }, [volumeData]);
+        return result;
+    }, [volumeData]);
 
-  const uniforms = useMemo(
-    () => ({
-      uVolumeTexture: { value: null as THREE.Data3DTexture | null },
-      u_cameraPosition: { value: new THREE.Vector3() },
-      u_stepSize: {
-        value: new THREE.Vector3(
-          1.0 / DIMENSION,
-          1.0 / DIMENSION,
-          1.0 / DIMENSION,
-        ),
-      },
-    }),
-    [],
-  );
+    const uniforms = useMemo(
+        () => ({
+            uVolumeTexture: { value: null as THREE.Data3DTexture | null },
+            u_cameraPosition: { value: new THREE.Vector3() },
+            u_stepSize: {
+                value: new THREE.Vector3(1 / DIMENSION, 1 / DIMENSION, 1 / DIMENSION),
+            },
+        }),
+        [],
+    );
 
-  useEffect(() => {
-    uniforms.uVolumeTexture.value = texture;
-    return () => texture?.dispose();
-  }, [texture, uniforms]);
+    useEffect(() => {
+        uniforms.uVolumeTexture.value = texture;
+        return () => texture?.dispose();
+    }, [texture, uniforms]);
 
-  useFrame(({ camera }) => {
-    const mesh = meshRef.current;
-    const material = materialRef.current;
-    if (!mesh || !material) return;
+    useFrame(({ camera }) => {
+        const mesh = meshRef.current;
+        const material = materialRef.current;
+        if (!mesh || !material) return;
 
-    camera.getWorldPosition(cameraPosition);
-    mesh.worldToLocal(cameraPosition);
-    material.uniforms.u_cameraPosition.value.copy(cameraPosition);
-  });
+        camera.getWorldPosition(cameraPosition);
+        mesh.worldToLocal(cameraPosition);
+        material.uniforms.u_cameraPosition.value.copy(cameraPosition);
+    });
 
-  return (
-    <mesh ref={meshRef}>
-      <boxGeometry args={[1, 1, 1]} />
-      <shaderMaterial
-        ref={materialRef}
-        uniforms={uniforms}
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        glslVersion={THREE.GLSL3}
-        transparent
-        side={THREE.FrontSide}
-      />
-    </mesh>
-  );
-}
+    return (
+        <mesh ref={meshRef}>
+            <boxGeometry args={[1, 1, 1]} />
+            <shaderMaterial
+                ref={materialRef}
+                uniforms={uniforms}
+                vertexShader={vertexShader}
+                fragmentShader={fragmentShader}
+                glslVersion={THREE.GLSL3}
+                transparent
+                side={THREE.FrontSide}
+            />
+        </mesh>
+    );
+};
+
+export default VolumetricRenderer;

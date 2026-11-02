@@ -8,29 +8,25 @@ import ThemeSwitch from './components/ThemeSwitch';
 import Viewer from './components/Viewer';
 
 import { useTheme } from './context/ThemeContext';
+import { Model, ModelType } from './types';
 
 function App() {
     const [viewGS, setViewGS] = useState(false);
     const [url, setUrl] = useState('');
     const [load, setLoad] = useState(false);
 
-    const [models, setModels] = useState<
-        {
-            url: string;
-            name: string;
-            type: 'splat' | 'obj' | 'fbx';
-        }[]
-    >([]);
+    const [models, setModels] = useState<Model[]>([]);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             const fileUrl = URL.createObjectURL(file);
-            let type: 'splat' | 'obj' | 'fbx' = 'obj';
+            let type: ModelType = 'obj';
 
             if (file.name.endsWith('.splat')) type = 'splat';
             else if (file.name.endsWith('.fbx')) type = 'fbx';
             else if (file.name.endsWith('.obj')) type = 'obj';
+            else if (file.name.endsWith('.raw') || file.name.endsWith('.vol')) type = 'volume';
             else return alert('Unsupported file format');
 
             setModels([...models, { url: fileUrl, name: file.name, type }]);
@@ -39,10 +35,11 @@ function App() {
 
     const loadUrlModel = () => {
         if (url) {
-            let type: 'splat' | 'obj' | 'fbx' = 'obj';
+            let type: ModelType = 'obj';
             if (url.endsWith('.splat')) type = 'splat';
             else if (url.endsWith('.fbx')) type = 'fbx';
             else if (url.endsWith('.obj')) type = 'obj';
+            else if (url.endsWith('.raw') || url.endsWith('.vol')) type = 'volume';
             else return alert('Unsupported URL file format');
 
             setModels([...models, { url, name: url.split('/').pop() ?? '', type }]);
@@ -121,7 +118,7 @@ function App() {
                                 <input
                                     className={`w-64 block text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-2 file:text-sm file:font-semibold ${theme == 'dark' ? 'file:bg-white/25 file:text-white/50 text-white/75 file:border-white/10' : 'file:bg-black/25 file:text-black/50 text-black/75 file:border-black/10'}`}
                                     type="file"
-                                    accept=".splat,.fbx,.obj,.glb"
+                                    accept=".splat,.fbx,.obj,.glb,.raw,.vol"
                                     onChange={handleFileUpload}
                                 />
                             </div>
