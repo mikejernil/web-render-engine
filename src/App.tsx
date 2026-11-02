@@ -10,6 +10,15 @@ import Viewer from './components/Viewer';
 import { useTheme } from './context/ThemeContext';
 import { Model, ModelType } from './types';
 
+const getModelType = (path: string): ModelType | null => {
+    const lower = path.toLowerCase();
+    if (lower.endsWith('.splat')) return 'splat';
+    if (lower.endsWith('.fbx')) return 'fbx';
+    if (lower.endsWith('.obj')) return 'obj';
+    if (lower.endsWith('.raw') || lower.endsWith('.vol')) return 'volume';
+    return null;
+};
+
 function App() {
     const [viewGS, setViewGS] = useState(false);
     const [url, setUrl] = useState('');
@@ -21,13 +30,8 @@ function App() {
         const file = event.target.files?.[0];
         if (file) {
             const fileUrl = URL.createObjectURL(file);
-            let type: ModelType = 'obj';
-
-            if (file.name.endsWith('.splat')) type = 'splat';
-            else if (file.name.endsWith('.fbx')) type = 'fbx';
-            else if (file.name.endsWith('.obj')) type = 'obj';
-            else if (file.name.endsWith('.raw') || file.name.endsWith('.vol')) type = 'volume';
-            else return alert('Unsupported file format');
+            const type = getModelType(file.name);
+            if (!type) return alert('Unsupported file format');
 
             setModels([...models, { url: fileUrl, name: file.name, type }]);
         }
@@ -35,14 +39,18 @@ function App() {
 
     const loadUrlModel = () => {
         if (url) {
-            let type: ModelType = 'obj';
-            if (url.endsWith('.splat')) type = 'splat';
-            else if (url.endsWith('.fbx')) type = 'fbx';
-            else if (url.endsWith('.obj')) type = 'obj';
-            else if (url.endsWith('.raw') || url.endsWith('.vol')) type = 'volume';
-            else return alert('Unsupported URL file format');
+            // match on the path only, so query params and hashes don't hide the extension
+            let pathname = url;
+            try {
+                pathname = new URL(url, window.location.href).pathname;
+            } catch {
+                // not a parseable URL, use the raw string
+            }
 
-            setModels([...models, { url, name: url.split('/').pop() ?? '', type }]);
+            const type = getModelType(pathname);
+            if (!type) return alert('Unsupported URL file format');
+
+            setModels([...models, { url, name: pathname.split('/').pop() ?? '', type }]);
         }
     };
 

@@ -55,7 +55,7 @@ const fragmentShader = `
     }
 `;
 
-interface VolumetricRendererProps {
+export interface VolumetricRendererProps {
     volumeData: Uint8Array | null;
 }
 
