@@ -13,101 +13,66 @@ import {
 } from '@react-three/drei';
 import { Canvas, useLoader } from '@react-three/fiber';
 
-import { useTheme } from '../context/ThemeContext';
+import { VolumeSettings } from '../utils/clippingBox';
 import Skybox from './Skybox';
-
-interface Model {
-    url: string;
-    name: string;
-    type: 'splat' | 'obj' | 'fbx';
-}
+import VolumetricObject from './VolumetricObject';
 
 interface ViewerProps {
-    models: Model[];
+    models: { url: string; name: string; type: 'splat' | 'obj' | 'fbx' }[];
     canvasRef: React.RefObject<HTMLCanvasElement>;
+    volumeSettings: VolumeSettings;
 }
 
-const Viewer: React.FC<ViewerProps> = ({ models, canvasRef }) => {
-    const { theme } = useTheme();
-
+const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) => {
     return (
-        <Canvas
-            ref={canvasRef}
-            style={{
-                width: '100vw',
-                height: '100vh',
-            }}
-            gl={{ preserveDrawingBuffer: true }}
-            camera={{ position: [0, 2, 4] }}
-        >
-            <ambientLight />
-            {models.map((model, index) => (
-                <Models key={index} model={model} />
-            ))}
-            <GizmoHelper alignment="bottom-right" margin={[60, 60]} renderPriority={1}>
-                <GizmoViewport
-                    axisColors={
-                        theme === 'dark' ? ['#fff', '#fff', '#fff'] : ['#000', '#000', '#000']
-                    }
-                    labelColor={theme === 'dark' ? 'black' : 'white'}
-                />
-            </GizmoHelper>
-            <Grid
-                position={[0, 0.01, 0]}
-                args={[10, 10]}
-                cellSize={0.5}
-                cellThickness={0.5}
-                cellColor={theme === 'light' ? '#333' : '#ddd'}
-                sectionSize={5}
-                sectionThickness={1.5}
-                sectionColor={theme === 'light' ? '#333' : '#ddd'}
-                fadeDistance={25}
-                fadeStrength={2}
-                followCamera={false}
-                infiniteGrid={true}
-            />
-            <Skybox type="HDRI" />
-            <ambientLight />
-            <pointLight position={[10, 10, 10]} />
-            <OrbitControls
-                makeDefault
-                maxPolarAngle={Math.PI / 1.6}
-                minDistance={1}
-                maxDistance={30}
-                enablePan={true}
-            />
-        </Canvas>
+        <div className="w-screen h-screen">
+            <Canvas ref={canvasRef} gl={{ preserveDrawingBuffer: true }}>
+                <Skybox type="HDRI" />
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[2, 2, 2]} intensity={1} />
+                <Grid infiniteGrid />
+                <OrbitControls makeDefault />
+                <GizmoHelper alignment="bottom-right" margin={[80, 100]}>
+                    <GizmoViewport />
+                </GizmoHelper>
+
+                <VolumetricObject settings={volumeSettings} />
+
+                {models.map((model, index) => (
+                    <Model key={index} model={model} />
+                ))}
+            </Canvas>
+        </div>
     );
 };
 
 export default Viewer;
 
-function Box() {
+function Loader() {
     return (
         <mesh>
-            <boxGeometry />
-            <meshStandardMaterial />
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="orange" />
         </mesh>
     );
 }
 
-// FBX Model component
 function FbxModel({ url }: { url: string }) {
     const fbx = useLoader(FBXLoader, url);
     return <primitive object={fbx} />;
 }
 
-// OBJ Model component
 function ObjModel({ url }: { url: string }) {
     const obj = useLoader(OBJLoader, url);
     return <primitive object={obj} />;
 }
-function Models({ model }: { model: Model }) {
+
+function Model({ model }: { model: { url: string; name: string; type: 'splat' | 'obj' | 'fbx' } }) {
     return (
-        <Suspense fallback={<Box />}>
+        <Suspense fallback={<Loader />}>
             {model.type === 'splat' && (
                 <TransformControls mode="translate">
-                    <Splat alphaTest={0.1} position={[0, 0, 0]} src={model.url} />
+                    <Splat src={model.url} />
                 </TransformControls>
             )}
             {model.type === 'fbx' && (
