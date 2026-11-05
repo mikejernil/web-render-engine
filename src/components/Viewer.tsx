@@ -1,5 +1,6 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useMemo } from 'react';
 
+import { FileLoader } from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
@@ -14,13 +15,9 @@ import {
 import { Canvas, useLoader } from '@react-three/fiber';
 
 import { useTheme } from '../context/ThemeContext';
+import { Model } from '../types';
 import Skybox from './Skybox';
-
-interface Model {
-    url: string;
-    name: string;
-    type: 'splat' | 'obj' | 'fbx';
-}
+import VolumetricRenderer from './VolumetricRenderer';
 
 interface ViewerProps {
     models: Model[];
@@ -102,6 +99,16 @@ function ObjModel({ url }: { url: string }) {
     const obj = useLoader(OBJLoader, url);
     return <primitive object={obj} />;
 }
+
+// Raw volume component
+function VolumeModel({ url }: { url: string }) {
+    const buffer = useLoader(FileLoader, url, (loader) =>
+        (loader as FileLoader).setResponseType('arraybuffer'),
+    ) as ArrayBuffer;
+    const volumeData = useMemo(() => new Uint8Array(buffer), [buffer]);
+    return <VolumetricRenderer volumeData={volumeData} />;
+}
+
 function Models({ model }: { model: Model }) {
     return (
         <Suspense fallback={<Box />}>
@@ -118,6 +125,11 @@ function Models({ model }: { model: Model }) {
             {model.type === 'obj' && (
                 <TransformControls mode="translate">
                     <ObjModel url={model.url} />
+                </TransformControls>
+            )}
+            {model.type === 'volume' && (
+                <TransformControls mode="translate">
+                    <VolumeModel url={model.url} />
                 </TransformControls>
             )}
         </Suspense>
