@@ -43,8 +43,9 @@ function App() {
             let pathname = url;
             try {
                 pathname = new URL(url, window.location.href).pathname;
-            } catch {
+            } catch (error) {
                 // not a parseable URL, use the raw string
+                console.error('Could not parse model URL, using it as-is:', url, error);
             }
 
             const type = getModelType(pathname);
