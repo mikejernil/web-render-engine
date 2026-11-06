@@ -9,6 +9,7 @@ import Viewer from './components/Viewer';
 
 import { useTheme } from './context/ThemeContext';
 import { Model, ModelType } from './types';
+import type { DataFormat } from './components/VolumetricRenderer';
 
 const getModelType = (path: string): ModelType | null => {
     const lower = path.toLowerCase();
@@ -25,6 +26,8 @@ function App() {
     const [load, setLoad] = useState(false);
 
     const [models, setModels] = useState<Model[]>([]);
+    const [volumeDimensions, setVolumeDimensions] = useState({ x: 256, y: 256, z: 256 });
+    const [volumeDataType, setVolumeDataType] = useState<DataFormat>('uint8');
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -39,12 +42,10 @@ function App() {
 
     const loadUrlModel = () => {
         if (url) {
-            // match on the path only, so query params and hashes don't hide the extension
             let pathname = url;
             try {
                 pathname = new URL(url, window.location.href).pathname;
             } catch (error) {
-                // not a parseable URL, use the raw string
                 console.error('Could not parse model URL, using it as-is:', url, error);
             }
 
@@ -131,11 +132,58 @@ function App() {
                                     onChange={handleFileUpload}
                                 />
                             </div>
+                            <div className="">
+                                <div
+                                    className={`${theme == 'light' ? 'text-black' : 'text-white'} text-sm mb-2`}
+                                >
+                                    Volume Dimensions
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10 text-white' : 'bg-black/25 placeholder:text-black/50 border-black/10 text-black'}`}
+                                        type="number"
+                                        placeholder="X"
+                                        value={volumeDimensions.x}
+                                        onChange={(e) => setVolumeDimensions({ ...volumeDimensions, x: parseInt(e.target.value) || 256 })}
+                                    />
+                                    <input
+                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10 text-white' : 'bg-black/25 placeholder:text-black/50 border-black/10 text-black'}`}
+                                        type="number"
+                                        placeholder="Y"
+                                        value={volumeDimensions.y}
+                                        onChange={(e) => setVolumeDimensions({ ...volumeDimensions, y: parseInt(e.target.value) || 256 })}
+                                    />
+                                    <input
+                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10 text-white' : 'bg-black/25 placeholder:text-black/50 border-black/10 text-black'}`}
+                                        type="number"
+                                        placeholder="Z"
+                                        value={volumeDimensions.z}
+                                        onChange={(e) => setVolumeDimensions({ ...volumeDimensions, z: parseInt(e.target.value) || 256 })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="">
+                                <div
+                                    className={`${theme == 'light' ? 'text-black' : 'text-white'} text-sm mb-2`}
+                                >
+                                    Data Type
+                                </div>
+                                <select
+                                    className={`w-full px-3 py-2 rounded-md border-2 border-solid backdrop-blur-xl ${theme == 'dark' ? 'bg-white/25 border-white/10 text-white' : 'bg-black/25 border-black/10 text-black'}`}
+                                    value={volumeDataType}
+                                    onChange={(e) => setVolumeDataType(e.target.value as DataFormat)}
+                                >
+                                    <option value="uint8">uint8</option>
+                                    <option value="uint16">uint16</option>
+                                    <option value="uint32">uint32</option>
+                                    <option value="float32">float32</option>
+                                </select>
+                            </div>
                         </>
                     )}
                 </div>
             </div>
-            <Viewer models={models} canvasRef={canvasRef} />
+            <Viewer models={models} canvasRef={canvasRef} volumeDimensions={volumeDimensions} volumeDataType={volumeDataType} />
             <div className={`flex gap-2 px-4 py-2 justify-center fixed top-0 right-0 z-10`}>
                 <ThemeSwitch />
                 <Screenshot canvasRef={canvasRef} theme={theme} />
