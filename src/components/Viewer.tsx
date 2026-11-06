@@ -17,14 +17,16 @@ import { Canvas, useLoader } from '@react-three/fiber';
 import { useTheme } from '../context/ThemeContext';
 import { Model } from '../types';
 import Skybox from './Skybox';
-import VolumetricRenderer from './VolumetricRenderer';
+import VolumetricRenderer, { type DataFormat } from './VolumetricRenderer';
 
 interface ViewerProps {
     models: Model[];
     canvasRef: React.RefObject<HTMLCanvasElement>;
+    volumeDimensions: { x: number; y: number; z: number };
+    volumeDataType: DataFormat;
 }
 
-const Viewer: React.FC<ViewerProps> = ({ models, canvasRef }) => {
+const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeDimensions, volumeDataType }) => {
     const { theme } = useTheme();
 
     return (
@@ -39,7 +41,7 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef }) => {
         >
             <ambientLight />
             {models.map((model, index) => (
-                <Models key={index} model={model} />
+                <Models key={index} model={model} volumeDimensions={volumeDimensions} volumeDataType={volumeDataType} />
             ))}
             <GizmoHelper alignment="bottom-right" margin={[60, 60]} renderPriority={1}>
                 <GizmoViewport
@@ -101,15 +103,36 @@ function ObjModel({ url }: { url: string }) {
 }
 
 // Raw volume component
-function VolumeModel({ url }: { url: string }) {
+function VolumeModel({ url, volumeDimensions, volumeDataType }: { url: string; volumeDimensions: { x: number; y: number; z: number }; volumeDataType: DataFormat }) {
     const buffer = useLoader(FileLoader, url, (loader) =>
         (loader as FileLoader).setResponseType('arraybuffer'),
     ) as ArrayBuffer;
-    const volumeData = useMemo(() => new Uint8Array(buffer), [buffer]);
-    return <VolumetricRenderer volumeData={volumeData} />;
+    
+    const { volumeData, dimensions, format } = useMemo(() => {
+        const dims: [number, number, number] = [volumeDimensions.x, volumeDimensions.y, volumeDimensions.z];
+        
+        let data: Uint8Array | Uint16Array | Uint32Array | Float32Array;
+        if (volumeDataType === 'uint16') {
+            data = new Uint16Array(buffer);
+        } else if (volumeDataType === 'uint32') {
+            data = new Uint32Array(buffer);
+        } else if (volumeDataType === 'float32') {
+            data = new Float32Array(buffer);
+        } else {
+            data = new Uint8Array(buffer);
+        }
+        
+        return {
+            volumeData: data,
+            dimensions: dims,
+            format: volumeDataType,
+        };
+    }, [buffer, volumeDimensions, volumeDataType]);
+    
+    return <VolumetricRenderer volumeData={volumeData} dimensions={dimensions} format={format} />;
 }
 
-function Models({ model }: { model: Model }) {
+function Models({ model, volumeDimensions, volumeDataType }: { model: Model; volumeDimensions: { x: number; y: number; z: number }; volumeDataType: DataFormat }) {
     return (
         <Suspense fallback={<Box />}>
             {model.type === 'splat' && (
@@ -129,7 +152,7 @@ function Models({ model }: { model: Model }) {
             )}
             {model.type === 'volume' && (
                 <TransformControls mode="translate">
-                    <VolumeModel url={model.url} />
+                    <VolumeModel url={model.url} volumeDimensions={volumeDimensions} volumeDataType={volumeDataType} />
                 </TransformControls>
             )}
         </Suspense>
