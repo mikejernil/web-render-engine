@@ -26,6 +26,7 @@ function App() {
     const [open, setOpen] = useState(false);
     const [url, setUrl] = useState('');
     const [load, setLoad] = useState(false);
+
     const [models, setModels] = useState<Model[]>([]);
     const [volumeSettings, setVolumeSettings] = useState<VolumeSettings>(INITIAL_VOLUME_SETTINGS);
 
@@ -120,7 +121,12 @@ function App() {
                     <div className="text-center">or</div>
                     <label className="cursor-pointer p-2 border border-current rounded text-center">
                         <UploadOutlined /> Upload File
-                        <input type="file" onChange={handleFileUpload} className="hidden" />
+                        <input
+                            type="file"
+                            accept=".splat,.fbx,.obj,.glb,.raw,.vol"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                        />
                     </label>
                 </div>
             )}

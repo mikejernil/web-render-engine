@@ -17,10 +17,11 @@ import { Canvas, useLoader } from '@react-three/fiber';
 import { Model } from '../types';
 import { VolumeSettings } from '../utils/clippingBox';
 import Skybox from './Skybox';
+import VolumetricObject from './VolumetricObject';
 import VolumetricRenderer from './VolumetricRenderer';
 
 interface ViewerProps {
-    models: { url: string; name: string; type: 'splat' | 'obj' | 'fbx' }[];
+    models: Model[];
     canvasRef: React.RefObject<HTMLCanvasElement>;
     volumeSettings: VolumeSettings;
 }
@@ -41,7 +42,7 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) =>
                 <VolumetricObject settings={volumeSettings} />
 
                 {models.map((model, index) => (
-                    <Model key={index} model={model} />
+                    <Models key={index} model={model} />
                 ))}
             </Canvas>
         </div>
