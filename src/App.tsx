@@ -11,43 +11,50 @@ import Viewer from './components/Viewer';
 import { INITIAL_VOLUME_SETTINGS, VolumeSettings } from './utils/clippingBox';
 
 import { useTheme } from './context/ThemeContext';
+import { Model, ModelType } from './types';
+
+const getModelType = (path: string): ModelType | null => {
+    const lower = path.toLowerCase();
+    if (lower.endsWith('.splat')) return 'splat';
+    if (lower.endsWith('.fbx')) return 'fbx';
+    if (lower.endsWith('.obj')) return 'obj';
+    if (lower.endsWith('.raw') || lower.endsWith('.vol')) return 'volume';
+    return null;
+};
 
 function App() {
     const [open, setOpen] = useState(false);
     const [url, setUrl] = useState('');
     const [load, setLoad] = useState(false);
-    const [models, setModels] = useState<
-        { url: string; name: string; type: 'splat' | 'obj' | 'fbx' }[]
-    >([]);
+    const [models, setModels] = useState<Model[]>([]);
     const [volumeSettings, setVolumeSettings] = useState<VolumeSettings>(INITIAL_VOLUME_SETTINGS);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             const fileUrl = URL.createObjectURL(file);
-            let type: 'splat' | 'obj' | 'fbx' = 'obj';
-            if (file.name.endsWith('.splat')) type = 'splat';
-            else if (file.name.endsWith('.fbx')) type = 'fbx';
-            else if (file.name.endsWith('.obj')) type = 'obj';
-            else {
-                alert('Unsupported file format');
-                return;
-            }
+            const type = getModelType(file.name);
+            if (!type) return alert('Unsupported file format');
+
             setModels([...models, { url: fileUrl, name: file.name, type }]);
         }
     };
 
     const loadUrlModel = () => {
         if (url) {
-            let type: 'splat' | 'obj' | 'fbx' = 'obj';
-            if (url.endsWith('.splat')) type = 'splat';
-            else if (url.endsWith('.fbx')) type = 'fbx';
-            else if (url.endsWith('.obj')) type = 'obj';
-            else {
-                alert('Unsupported URL file format');
-                return;
+            // match on the path only, so query params and hashes don't hide the extension
+            let pathname = url;
+            try {
+                pathname = new URL(url, window.location.href).pathname;
+            } catch (error) {
+                // not a parseable URL, use the raw string
+                console.error('Could not parse model URL, using it as-is:', url, error);
             }
-            setModels([...models, { url, name: url.split('/').pop() ?? '', type }]);
+
+            const type = getModelType(pathname);
+            if (!type) return alert('Unsupported URL file format');
+
+            setModels([...models, { url, name: pathname.split('/').pop() ?? '', type }]);
         }
     };
 
