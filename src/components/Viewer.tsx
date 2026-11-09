@@ -17,16 +17,14 @@ import { Canvas, useLoader } from '@react-three/fiber';
 import { useTheme } from '../context/ThemeContext';
 import { Model } from '../types';
 import Skybox from './Skybox';
-import VolumetricRenderer, { type DataFormat } from './VolumetricRenderer';
+import VolumetricRenderer from './VolumetricRenderer';
 
 interface ViewerProps {
     models: Model[];
     canvasRef: React.RefObject<HTMLCanvasElement>;
-    volumeDimensions: { x: number; y: number; z: number };
-    volumeDataType: DataFormat;
 }
 
-const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeDimensions, volumeDataType }) => {
+const Viewer: React.FC<ViewerProps> = ({ models, canvasRef }) => {
     const { theme } = useTheme();
 
     return (
@@ -41,7 +39,7 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeDimensions, vo
         >
             <ambientLight />
             {models.map((model, index) => (
-                <Models key={index} model={model} volumeDimensions={volumeDimensions} volumeDataType={volumeDataType} />
+                <Models key={index} model={model} />
             ))}
             <GizmoHelper alignment="bottom-right" margin={[60, 60]} renderPriority={1}>
                 <GizmoViewport
@@ -103,36 +101,40 @@ function ObjModel({ url }: { url: string }) {
 }
 
 // Raw volume component
-function VolumeModel({ url, volumeDimensions, volumeDataType }: { url: string; volumeDimensions: { x: number; y: number; z: number }; volumeDataType: DataFormat }) {
-    const buffer = useLoader(FileLoader, url, (loader) =>
+function VolumeModel({ model }: { model: Model }) {
+    const buffer = useLoader(FileLoader, model.url, (loader) =>
         (loader as FileLoader).setResponseType('arraybuffer'),
     ) as ArrayBuffer;
-    
-    const { volumeData, dimensions, format } = useMemo(() => {
-        const dims: [number, number, number] = [volumeDimensions.x, volumeDimensions.y, volumeDimensions.z];
-        
+
+    const { volumeData, dimensions } = useMemo(() => {
+        const dims: [number, number, number] = [
+            model.volumeDimensions?.x ?? 256,
+            model.volumeDimensions?.y ?? 256,
+            model.volumeDimensions?.z ?? 256,
+        ];
+        const dataFormat = model.volumeDataFormat ?? 'uint8';
+
         let data: Uint8Array | Uint16Array | Uint32Array | Float32Array;
-        if (volumeDataType === 'uint16') {
+        if (dataFormat === 'uint16') {
             data = new Uint16Array(buffer);
-        } else if (volumeDataType === 'uint32') {
+        } else if (dataFormat === 'uint32') {
             data = new Uint32Array(buffer);
-        } else if (volumeDataType === 'float32') {
+        } else if (dataFormat === 'float32') {
             data = new Float32Array(buffer);
         } else {
             data = new Uint8Array(buffer);
         }
-        
+
         return {
             volumeData: data,
             dimensions: dims,
-            format: volumeDataType,
         };
-    }, [buffer, volumeDimensions, volumeDataType]);
-    
-    return <VolumetricRenderer volumeData={volumeData} dimensions={dimensions} format={format} />;
+    }, [buffer, model.volumeDimensions, model.volumeDataFormat]);
+
+    return <VolumetricRenderer volumeData={volumeData} dimensions={dimensions} />;
 }
 
-function Models({ model, volumeDimensions, volumeDataType }: { model: Model; volumeDimensions: { x: number; y: number; z: number }; volumeDataType: DataFormat }) {
+function Models({ model }: { model: Model }) {
     return (
         <Suspense fallback={<Box />}>
             {model.type === 'splat' && (
@@ -152,7 +154,7 @@ function Models({ model, volumeDimensions, volumeDataType }: { model: Model; vol
             )}
             {model.type === 'volume' && (
                 <TransformControls mode="translate">
-                    <VolumeModel url={model.url} volumeDimensions={volumeDimensions} volumeDataType={volumeDataType} />
+                    <VolumeModel model={model} />
                 </TransformControls>
             )}
         </Suspense>

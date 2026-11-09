@@ -6,6 +6,7 @@ in vec3 oTexCoords;
 uniform sampler3D uVolumeTexture;
 uniform vec3 u_cameraPosition;
 uniform vec3 u_stepSize;
+uniform float u_maxValue;
 
 const int MAX_SAMPLES = 300;
 const vec3 texMin = vec3(0.0);
@@ -26,7 +27,7 @@ void main() {
         bool bStop = dot(sign(dataPosition - texMin), sign(texMax - dataPosition)) < 3.0;
         if (bStop) break;
 
-        float fSample = texture(uVolumeTexture, dataPosition).r;
+        float fSample = texture(uVolumeTexture, dataPosition).r / u_maxValue;
         float prev_alpha = fSample * (1.0 - FragColor.a);
 
         FragColor.rgb += prev_alpha * vec3(fSample);

@@ -6,28 +6,29 @@ import { useFrame } from '@react-three/fiber';
 
 import fragmentShader from '../shaders/volume/fragment.glsl';
 import vertexShader from '../shaders/volume/vertex.glsl';
-
-export type DataFormat = 'uint8' | 'uint16' | 'uint32' | 'float32';
+import { DataFormat } from '../types';
 
 export interface VolumetricRendererProps {
     volumeData: Uint8Array | Uint16Array | Uint32Array | Float32Array | null;
-    format?: DataFormat;
     dimensions?: [number, number, number];
 }
 
-type RawTypedArray = Uint8Array | Uint16Array | Uint32Array | Float32Array;
-
 function getMaxValueForFormat(format: DataFormat): number {
     switch (format) {
-        case 'uint8': return 255;
-        case 'uint16': return 65535;
-        case 'uint32': return 4294967295;
-        case 'float32': return 1.0;
-        default: return 255;
+        case 'uint8':
+            return 255;
+        case 'uint16':
+            return 65535;
+        case 'uint32':
+            return 4294967295;
+        case 'float32':
+            return 1.0;
+        default:
+            return 255;
     }
 }
 
-function detectFormat(data: RawTypedArray): DataFormat {
+function detectFormat(data: Uint8Array | Uint16Array | Uint32Array | Float32Array): DataFormat {
     if (data instanceof Uint8Array) return 'uint8';
     if (data instanceof Uint16Array) return 'uint16';
     if (data instanceof Uint32Array) return 'uint32';
@@ -37,7 +38,6 @@ function detectFormat(data: RawTypedArray): DataFormat {
 
 const VolumetricRenderer = ({
     volumeData,
-    format,
     dimensions = [256, 256, 256],
 }: VolumetricRendererProps) => {
     const meshRef = useRef<THREE.Mesh>(null);
@@ -50,19 +50,37 @@ const VolumetricRenderer = ({
     const texture = useMemo(() => {
         if (!volumeData) return null;
 
-        const detectedFormat = format || detectFormat(volumeData);
-        const maxValue = getMaxValueForFormat(detectedFormat);
-
-        const data = new Float32Array(voxelCount);
+        const detectedFormat = detectFormat(volumeData);
         const srcData = volumeData.subarray(0, voxelCount);
 
-        for (let i = 0; i < srcData.length; i++) {
-            data[i] = srcData[i] / maxValue;
+        let textureType: THREE.TextureDataType;
+        let textureData: Uint8Array | Uint16Array | Uint32Array | Float32Array;
+
+        switch (detectedFormat) {
+            case 'uint8':
+                textureType = THREE.UnsignedByteType;
+                textureData = srcData as Uint8Array;
+                break;
+            case 'uint16':
+                textureType = THREE.UnsignedShortType;
+                textureData = srcData as Uint16Array;
+                break;
+            case 'uint32':
+                textureType = THREE.UnsignedIntType;
+                textureData = srcData as Uint32Array;
+                break;
+            case 'float32':
+                textureType = THREE.FloatType;
+                textureData = srcData as Float32Array;
+                break;
+            default:
+                textureType = THREE.UnsignedByteType;
+                textureData = srcData as Uint8Array;
         }
 
-        const result = new THREE.Data3DTexture(data, dimX, dimY, dimZ);
+        const result = new THREE.Data3DTexture(textureData, dimX, dimY, dimZ);
         result.format = THREE.RedFormat;
-        result.type = THREE.FloatType;
+        result.type = textureType;
         result.minFilter = THREE.LinearFilter;
         result.magFilter = THREE.LinearFilter;
         result.wrapS = THREE.ClampToEdgeWrapping;
@@ -71,7 +89,7 @@ const VolumetricRenderer = ({
         result.needsUpdate = true;
 
         return result;
-    }, [volumeData, format, dimX, dimY, dimZ, voxelCount]);
+    }, [volumeData, dimX, dimY, dimZ, voxelCount]);
 
     const uniforms = useMemo(
         () => ({
@@ -80,14 +98,22 @@ const VolumetricRenderer = ({
             u_stepSize: {
                 value: new THREE.Vector3(1.0 / dimX, 1.0 / dimY, 1.0 / dimZ),
             },
+            u_maxValue: { value: 255.0 },
         }),
         [dimX, dimY, dimZ],
     );
 
     useEffect(() => {
+        if (!volumeData) return;
+
+        const detectedFormat = detectFormat(volumeData);
+        const maxValue = getMaxValueForFormat(detectedFormat);
+
         uniforms.uVolumeTexture.value = texture;
+        uniforms.u_maxValue.value = maxValue;
+
         return () => texture?.dispose();
-    }, [texture, uniforms]);
+    }, [texture, uniforms, volumeData]);
 
     useFrame(({ camera }) => {
         const mesh = meshRef.current;
