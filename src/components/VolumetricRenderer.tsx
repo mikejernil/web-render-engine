@@ -103,6 +103,8 @@ const VolumetricRenderer = ({
         [dimX, dimY, dimZ],
     );
 
+    // Bind the current texture to the shader uniform, and free its GPU memory
+    // when the data changes or the component unmounts.
     useEffect(() => {
         if (!volumeData) return;
 
@@ -115,6 +117,8 @@ const VolumetricRenderer = ({
         return () => texture?.dispose();
     }, [texture, uniforms, volumeData]);
 
+    // Every frame, give the shader the camera position in the cube's local space
+    // so it can work out the ray direction for each pixel.
     useFrame(({ camera }) => {
         const mesh = meshRef.current;
         const material = materialRef.current;
