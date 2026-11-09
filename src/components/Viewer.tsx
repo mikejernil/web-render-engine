@@ -15,65 +15,58 @@ import {
 import { Canvas, useLoader } from '@react-three/fiber';
 
 import { useTheme } from '../context/ThemeContext';
-import { Model } from '../types';
+import { Model, VolumeSettings } from '../types';
 import Skybox from './Skybox';
+import VolumetricObject from './VolumetricObject';
 import VolumetricRenderer from './VolumetricRenderer';
 
 interface ViewerProps {
     models: Model[];
     canvasRef: React.RefObject<HTMLCanvasElement>;
+    volumeSettings: VolumeSettings;
 }
 
-const Viewer: React.FC<ViewerProps> = ({ models, canvasRef }) => {
+const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) => {
     const { theme } = useTheme();
 
     return (
-        <Canvas
-            ref={canvasRef}
-            style={{
-                width: '100vw',
-                height: '100vh',
-            }}
-            gl={{ preserveDrawingBuffer: true }}
-            camera={{ position: [0, 2, 4] }}
-        >
-            <ambientLight />
-            {models.map((model, index) => (
-                <Models key={index} model={model} />
-            ))}
-            <GizmoHelper alignment="bottom-right" margin={[60, 60]} renderPriority={1}>
-                <GizmoViewport
-                    axisColors={
-                        theme === 'dark' ? ['#fff', '#fff', '#fff'] : ['#000', '#000', '#000']
-                    }
-                    labelColor={theme === 'dark' ? 'black' : 'white'}
+        <div className="w-screen h-screen">
+            <Canvas
+                ref={canvasRef}
+                gl={{ preserveDrawingBuffer: true }}
+                camera={{ position: [5, 5, 5] }}
+            >
+                <Skybox type="HDRI" />
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[2, 2, 2]} intensity={1} />
+                <Grid
+                    position={[0, -0.01, 0]}
+                    args={[10.5, 10.5]}
+                    cellColor={theme == 'light' ? '#000' : '#fff'}
+                    sectionColor={theme == 'light' ? '#ff0000' : '#00ffff'}
+                    fadeDistance={20}
+                    fadeStrength={1}
+                    infiniteGrid
                 />
-            </GizmoHelper>
-            <Grid
-                position={[0, 0.01, 0]}
-                args={[10, 10]}
-                cellSize={0.5}
-                cellThickness={0.5}
-                cellColor={theme === 'light' ? '#333' : '#ddd'}
-                sectionSize={5}
-                sectionThickness={1.5}
-                sectionColor={theme === 'light' ? '#333' : '#ddd'}
-                fadeDistance={25}
-                fadeStrength={2}
-                followCamera={false}
-                infiniteGrid={true}
-            />
-            <Skybox type="HDRI" />
-            <ambientLight />
-            <pointLight position={[10, 10, 10]} />
-            <OrbitControls
-                makeDefault
-                maxPolarAngle={Math.PI / 1.6}
-                minDistance={1}
-                maxDistance={30}
-                enablePan={true}
-            />
-        </Canvas>
+                <OrbitControls makeDefault />
+                <GizmoHelper alignment="bottom-right" margin={[80, 100]}>
+                    <GizmoViewport
+                        axisColors={
+                            theme == 'light'
+                                ? ['#ff2060', '#20df80', '#2080ff']
+                                : ['#9d4b4b', '#2f7f4f', '#3b5b9d']
+                        }
+                        labelColor={theme == 'light' ? 'black' : 'white'}
+                    />
+                </GizmoHelper>
+
+                <VolumetricObject settings={volumeSettings} />
+
+                {models.map((model, index) => (
+                    <Models key={index} model={model} />
+                ))}
+            </Canvas>
+        </div>
     );
 };
 
@@ -82,8 +75,8 @@ export default Viewer;
 function Box() {
     return (
         <mesh>
-            <boxGeometry />
-            <meshStandardMaterial />
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="orange" />
         </mesh>
     );
 }
@@ -114,7 +107,7 @@ function Models({ model }: { model: Model }) {
         <Suspense fallback={<Box />}>
             {model.type === 'splat' && (
                 <TransformControls mode="translate">
-                    <Splat alphaTest={0.1} position={[0, 0, 0]} src={model.url} />
+                    <Splat src={model.url} />
                 </TransformControls>
             )}
             {model.type === 'fbx' && (

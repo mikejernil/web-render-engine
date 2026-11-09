@@ -1,166 +1,235 @@
 import React, { useState } from 'react';
 
-import {
-    ClippingBoxFaces,
-    INITIAL_CLIPPING_BOX_FACES,
-    VolumeColorPreset,
-    VolumeSettings,
-} from '../utils/clippingBox';
+import { ClippingBoxFaces, VolumeColorPreset, VolumeSettings } from '../types';
+import { CLIPPING_FACE_CONTROLS_METADATA, INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
 
-interface ClippingBoxUIProps {
+/** Props for the `ClippingBoxUI` control panel component. */
+export interface ClippingBoxUIProps {
     settings: VolumeSettings;
     setSettings: React.Dispatch<React.SetStateAction<VolumeSettings>>;
     theme: 'light' | 'dark';
 }
 
-const FACE_SLIDER_LIST: Array<{
-    key: keyof ClippingBoxFaces;
-    label: string;
-}> = [
-    { key: 'xMinusSideFace', label: 'X- Left Face' },
-    { key: 'xPlusSideFace', label: 'X+ Right Face' },
-    { key: 'yMinusBottomFace', label: 'Y- Bottom Face' },
-    { key: 'yPlusTopFace', label: 'Y+ Top Face' },
-    { key: 'zMinusBackFace', label: 'Z- Back Face' },
-    { key: 'zPlusFrontFace', label: 'Z+ Front Face' },
-];
+const MINIMUM_FACE_SEPARATION = 0.05;
 
+/**
+ * Floating glassmorphic control panel for adjusting the 6 clipping box faces
+ * and volumetric raycasting appearance.
+ */
 const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
-    const [isOpen, setIsOpen] = useState(true);
+    const [isPanelExpanded, setIsPanelExpanded] = useState(true);
 
-    const handleFaceSliderChange = (faceKey: keyof ClippingBoxFaces, newValue: number) => {
-        setSettings((prev) => ({
-            ...prev,
-            faces: {
-                ...prev.faces,
-                [faceKey]: newValue,
-            },
-        }));
+    const updateClippingFaceBound = (
+        faceKey: keyof ClippingBoxFaces,
+        rawSliderValue: number,
+        boundType: 'minimum' | 'maximum',
+        pairedFaceKey: keyof ClippingBoxFaces,
+    ) => {
+        setSettings((previousSettings) => {
+            const pairedBoundValue = previousSettings.faces[pairedFaceKey];
+            const clampedValue =
+                boundType === 'minimum'
+                    ? Math.min(rawSliderValue, pairedBoundValue - MINIMUM_FACE_SEPARATION)
+                    : Math.max(rawSliderValue, pairedBoundValue + MINIMUM_FACE_SEPARATION);
+
+            return {
+                ...previousSettings,
+                faces: {
+                    ...previousSettings.faces,
+                    [faceKey]: Number(clampedValue.toFixed(3)),
+                },
+            };
+        });
     };
 
-    const resetClippingFaces = () => {
-        setSettings((prev) => ({
-            ...prev,
+    const resetAllClippingFaces = () => {
+        setSettings((previousSettings) => ({
+            ...previousSettings,
             faces: { ...INITIAL_CLIPPING_BOX_FACES },
         }));
     };
 
-    const containerStyle =
+    const panelSurfaceClasses =
         theme === 'light'
-            ? 'bg-gray-200/90 text-black'
-            : 'bg-black/85 text-white border border-gray-700';
+            ? 'bg-white/90 text-gray-900 border-gray-300'
+            : 'bg-zinc-900/90 text-gray-100 border-zinc-700';
+
+    const inputSurfaceClasses =
+        theme === 'light'
+            ? 'bg-gray-100 border-gray-300 text-gray-900'
+            : 'bg-zinc-800 border-zinc-600 text-gray-100';
 
     return (
         <div
-            className={`fixed top-16 right-3 z-50 w-64 p-3 rounded-lg shadow-lg text-xs ${containerStyle}`}
+            className={`fixed top-20 right-5 z-20 w-80 rounded-xl border p-4 shadow-xl backdrop-blur-md transition-all ${panelSurfaceClasses}`}
         >
-            <div className="flex justify-between items-center font-bold">
-                <span>Volume Clipping Box</span>
+            <div className="flex items-center justify-between">
+                <span className="text-sm font-bold tracking-wide uppercase">
+                    Volumetric Clipping Box
+                </span>
                 <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="px-2 py-0.5 rounded bg-blue-600 text-white"
+                    type="button"
+                    onClick={() => setIsPanelExpanded(!isPanelExpanded)}
+                    className="px-2 py-1 text-xs rounded border border-current opacity-80 hover:opacity-100"
                 >
-                    {isOpen ? 'Hide' : 'Show'}
+                    {isPanelExpanded ? 'Hide' : 'Show'}
                 </button>
             </div>
 
-            {isOpen && (
-                <div className="mt-3 flex flex-col gap-2">
-                    <label className="flex justify-between items-center cursor-pointer">
-                        <span>Show Volume</span>
-                        <input
-                            type="checkbox"
-                            checked={settings.showVolume}
-                            onChange={(e) =>
-                                setSettings((prev) => ({ ...prev, showVolume: e.target.checked }))
-                            }
-                        />
-                    </label>
+            {isPanelExpanded && (
+                <div className="mt-3 space-y-3 text-xs max-h-[75vh] overflow-y-auto pr-1">
+                    <div className="space-y-1.5 border-b border-current/15 pb-3">
+                        <label className="flex items-center justify-between cursor-pointer">
+                            <span>Show Volumetric Object</span>
+                            <input
+                                type="checkbox"
+                                checked={settings.showVolume}
+                                onChange={(event) =>
+                                    setSettings((previous) => ({
+                                        ...previous,
+                                        showVolume: event.target.checked,
+                                    }))
+                                }
+                            />
+                        </label>
 
-                    <label className="flex justify-between items-center cursor-pointer">
-                        <span>Show Clipping Box</span>
-                        <input
-                            type="checkbox"
-                            checked={settings.showClippingBox}
-                            onChange={(e) =>
-                                setSettings((prev) => ({
-                                    ...prev,
-                                    showClippingBox: e.target.checked,
-                                }))
-                            }
-                        />
-                    </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                            <span>Show Clipping Box Wireframe</span>
+                            <input
+                                type="checkbox"
+                                checked={settings.showClippingBox}
+                                onChange={(event) =>
+                                    setSettings((previous) => ({
+                                        ...previous,
+                                        showClippingBox: event.target.checked,
+                                    }))
+                                }
+                            />
+                        </label>
 
-                    <hr className="border-gray-500/40 my-1" />
-
-                    <div className="flex justify-between items-center">
-                        <span className="font-semibold">Clip Faces</span>
-                        <button
-                            onClick={resetClippingFaces}
-                            className="px-1.5 py-0.5 bg-gray-500 text-white rounded text-[10px]"
-                        >
-                            Reset
-                        </button>
+                        <label className="flex items-center justify-between cursor-pointer">
+                            <span>Show Outer Reference Cube</span>
+                            <input
+                                type="checkbox"
+                                checked={settings.showOuterReferenceBox}
+                                onChange={(event) =>
+                                    setSettings((previous) => ({
+                                        ...previous,
+                                        showOuterReferenceBox: event.target.checked,
+                                    }))
+                                }
+                            />
+                        </label>
                     </div>
 
-                    {FACE_SLIDER_LIST.map(({ key, label }) => (
-                        <div key={key} className="flex flex-col">
-                            <div className="flex justify-between">
-                                <span>{label}</span>
-                                <span>{settings.faces[key].toFixed(2)}</span>
+                    <div className="space-y-2 border-b border-current/15 pb-3">
+                        <div className="flex items-center justify-between">
+                            <span className="font-semibold">Box Face Clipping Bounds</span>
+                            <button
+                                type="button"
+                                onClick={resetAllClippingFaces}
+                                className="px-2 py-0.5 text-[11px] rounded border border-current/40 hover:border-current"
+                            >
+                                Reset Box
+                            </button>
+                        </div>
+
+                        {CLIPPING_FACE_CONTROLS_METADATA.map((controlItem) => {
+                            const currentFaceValue = settings.faces[controlItem.faceKey];
+                            return (
+                                <div key={controlItem.faceKey} className="space-y-0.5">
+                                    <div className="flex justify-between text-[11px]">
+                                        <span>{controlItem.displayLabel}</span>
+                                        <span className="font-mono">
+                                            {currentFaceValue.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min={-1.0}
+                                        max={1.0}
+                                        step={0.01}
+                                        value={currentFaceValue}
+                                        onChange={(event) =>
+                                            updateClippingFaceBound(
+                                                controlItem.faceKey,
+                                                parseFloat(event.target.value),
+                                                controlItem.boundType,
+                                                controlItem.pairedFaceKey,
+                                            )
+                                        }
+                                        className="w-full cursor-pointer accent-cyan-500"
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="space-y-2">
+                        <span className="font-semibold block">Raycasting Appearance</span>
+
+                        <div className="space-y-0.5">
+                            <div className="flex justify-between text-[11px]">
+                                <span>Density Threshold</span>
+                                <span className="font-mono">
+                                    {settings.densityThreshold.toFixed(2)}
+                                </span>
                             </div>
                             <input
                                 type="range"
-                                min={-1}
-                                max={1}
-                                step={0.02}
-                                value={settings.faces[key]}
-                                onChange={(e) =>
-                                    handleFaceSliderChange(key, parseFloat(e.target.value))
+                                min={0.01}
+                                max={0.95}
+                                step={0.01}
+                                value={settings.densityThreshold}
+                                onChange={(event) =>
+                                    setSettings((previous) => ({
+                                        ...previous,
+                                        densityThreshold: parseFloat(event.target.value),
+                                    }))
                                 }
+                                className="w-full cursor-pointer accent-cyan-500"
                             />
                         </div>
-                    ))}
 
-                    <hr className="border-gray-500/40 my-1" />
-
-                    <div className="flex flex-col">
-                        <div className="flex justify-between">
-                            <span>Threshold</span>
-                            <span>{settings.densityThreshold.toFixed(2)}</span>
+                        <div className="space-y-0.5">
+                            <div className="flex justify-between text-[11px]">
+                                <span>Volume Opacity</span>
+                                <span className="font-mono">{settings.opacity.toFixed(2)}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min={0.05}
+                                max={2.0}
+                                step={0.05}
+                                value={settings.opacity}
+                                onChange={(event) =>
+                                    setSettings((previous) => ({
+                                        ...previous,
+                                        opacity: parseFloat(event.target.value),
+                                    }))
+                                }
+                                className="w-full cursor-pointer accent-cyan-500"
+                            />
                         </div>
-                        <input
-                            type="range"
-                            min={0.05}
-                            max={0.8}
-                            step={0.01}
-                            value={settings.densityThreshold}
-                            onChange={(e) =>
-                                setSettings((prev) => ({
-                                    ...prev,
-                                    densityThreshold: parseFloat(e.target.value),
-                                }))
-                            }
-                        />
-                    </div>
 
-                    <div className="flex justify-between items-center mt-1">
-                        <span>Color</span>
-                        <select
-                            value={settings.colorPreset}
-                            onChange={(e) =>
-                                setSettings((prev) => ({
-                                    ...prev,
-                                    colorPreset: e.target.value as VolumeColorPreset,
-                                }))
-                            }
-                            className="p-1 rounded text-black bg-white"
-                        >
-                            <option value="anatomical">Anatomical</option>
-                            <option value="viridis">Viridis</option>
-                            <option value="thermal">Thermal</option>
-                            <option value="grayscale">Grayscale</option>
-                        </select>
+                        <div className="flex items-center justify-between pt-1">
+                            <span>Colormap</span>
+                            <select
+                                value={settings.colorPreset}
+                                onChange={(event) =>
+                                    setSettings((previous) => ({
+                                        ...previous,
+                                        colorPreset: event.target.value as VolumeColorPreset,
+                                    }))
+                                }
+                                className={`rounded border px-2 py-1 text-xs ${inputSurfaceClasses}`}
+                            >
+                                <option value="anatomical">Anatomical</option>
+                                <option value="viridis">Viridis</option>
+                                <option value="thermal">Thermal</option>
+                                <option value="grayscale">Grayscale</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             )}

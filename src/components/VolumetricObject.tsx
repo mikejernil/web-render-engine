@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import {
     BackSide,
@@ -12,18 +12,22 @@ import {
 
 import { useFrame, useThree } from '@react-three/fiber';
 
-import { VOLUME_FRAGMENT_SHADER, VOLUME_VERTEX_SHADER } from '../shaders/volumeShader';
+import clippingFragmentShader from '../shaders/volume/clippingFragment.glsl';
+import clippingVertexShader from '../shaders/volume/clippingVertex.glsl';
+import { VolumeColorPreset, VolumeSettings } from '../types';
 import {
-    VolumeColorPreset,
-    VolumeSettings,
+    INITIAL_CLIPPING_BOX_FACES,
     createSphereNoiseVolumeTexture,
     createWireframeEdgePositions,
 } from '../utils/clippingBox';
 
-interface VolumetricObjectProps {
+/** Props for the `VolumetricObject` component. */
+export interface VolumetricObjectProps {
+    /** Active clipping bounds and raycasting display settings. */
     settings: VolumeSettings;
 }
 
+/** Maps each `VolumeColorPreset` name to its integer uniform index in the fragment shader. */
 const COLOR_PRESET_TO_INDEX: Record<VolumeColorPreset, number> = {
     anatomical: 0,
     viridis: 1,
@@ -31,13 +35,26 @@ const COLOR_PRESET_TO_INDEX: Record<VolumeColorPreset, number> = {
     grayscale: 3,
 };
 
+/**
+ * Renders the procedural 3D noise volume and its interactive wireframe clipping box
+ * inside a React Three Fiber `<Canvas>`.
+ */
 const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
     const { camera } = useThree();
     const volumeMeshRef = useRef<Mesh>(null);
     const shaderMaterialRef = useRef<ShaderMaterial>(null);
 
+    // Generate the procedural 64^3 3D sphere noise texture once on mount.
     const volumeTexture = useMemo(() => createSphereNoiseVolumeTexture(64), []);
 
+    // Free GPU memory for the 3D texture when the texture instance changes or component unmounts.
+    useEffect(() => {
+        return () => {
+            volumeTexture.dispose();
+        };
+    }, [volumeTexture]);
+
+    // Rebuild the 12-edge wireframe BufferGeometry whenever any of the 6 clipping faces move.
     const clippingBoxGeometry = useMemo(() => {
         const positions = createWireframeEdgePositions(settings.faces);
         const geometry = new BufferGeometry();
@@ -45,6 +62,29 @@ const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
         return geometry;
     }, [settings.faces]);
 
+    // Dispose the previous wireframe GL buffer whenever `clippingBoxGeometry` is replaced or unmounts.
+    useEffect(() => {
+        return () => {
+            clippingBoxGeometry.dispose();
+        };
+    }, [clippingBoxGeometry]);
+
+    // Create the static outer reference cube geometry once on mount.
+    const outerReferenceBoxGeometry = useMemo(() => {
+        const positions = createWireframeEdgePositions(INITIAL_CLIPPING_BOX_FACES);
+        const geometry = new BufferGeometry();
+        geometry.setAttribute('position', new BufferAttribute(positions, 3));
+        return geometry;
+    }, []);
+
+    // Dispose the static outer reference cube geometry on unmount.
+    useEffect(() => {
+        return () => {
+            outerReferenceBoxGeometry.dispose();
+        };
+    }, [outerReferenceBoxGeometry]);
+
+    // Initialize the shader uniform object once and keep the 3D texture reference bound.
     const uniforms = useMemo(
         () => ({
             uVolumeTexture: { value: volumeTexture },
@@ -62,6 +102,7 @@ const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
         [volumeTexture],
     );
 
+    // Synchronize the local-space camera position and clipping box uniforms on every frame.
     useFrame(() => {
         if (!shaderMaterialRef.current || !volumeMeshRef.current) return;
 
@@ -89,14 +130,20 @@ const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
                     <shaderMaterial
                         ref={shaderMaterialRef}
                         glslVersion={GLSL3}
-                        vertexShader={VOLUME_VERTEX_SHADER}
-                        fragmentShader={VOLUME_FRAGMENT_SHADER}
+                        vertexShader={clippingVertexShader}
+                        fragmentShader={clippingFragmentShader}
                         uniforms={uniforms}
                         transparent
                         depthWrite={false}
                         side={BackSide}
                     />
                 </mesh>
+            )}
+
+            {settings.showOuterReferenceBox && (
+                <lineSegments geometry={outerReferenceBoxGeometry}>
+                    <lineBasicMaterial color="#888888" transparent opacity={0.45} />
+                </lineSegments>
             )}
 
             {settings.showClippingBox && (

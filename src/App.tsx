@@ -2,13 +2,16 @@ import { useRef, useState } from 'react';
 
 import { CloudUploadOutlined, PlusCircleOutlined, UploadOutlined } from '@ant-design/icons';
 
+import ClippingBoxUI from './components/ClippingBoxUI';
 import Screenshot from './components/Screenshot';
 import Socials from './components/Socials';
 import ThemeSwitch from './components/ThemeSwitch';
 import Viewer from './components/Viewer';
 
+import { INITIAL_VOLUME_SETTINGS } from './utils/clippingBox';
+
 import { useTheme } from './context/ThemeContext';
-import { Model, ModelType } from './types';
+import { Model, ModelType, VolumeSettings } from './types';
 
 const getModelType = (path: string): ModelType | null => {
     const lower = path.toLowerCase();
@@ -25,6 +28,7 @@ function App() {
     const [load, setLoad] = useState(false);
 
     const [models, setModels] = useState<Model[]>([]);
+    const [volumeSettings, setVolumeSettings] = useState<VolumeSettings>(INITIAL_VOLUME_SETTINGS);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -61,24 +65,24 @@ function App() {
     }
 
     const { theme } = useTheme();
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     return (
         <>
-            <div className="fixed top-0 left-0 z-10">
-                <div className="flex p-2 flex-col gap-2">
-                    <span
-                        className={`font-bold text-3xl ${theme == 'dark' ? ' text-white' : 'text-black'}`}
+            <div className="flex flex-row">
+                <div
+                    className={`flex flex-col gap-2 w-72 fixed top-5 left-5 p-4 rounded-xl border-2 border-solid z-10 backdrop-blur-md ${theme == 'dark' ? 'bg-white/10 border-white/10' : 'bg-black/10 border-black/10'}`}
+                >
+                    <div
+                        className={`text-2xl font-bold text-center select-none ${theme == 'dark' ? 'text-white' : 'text-black'}`}
                     >
                         Web Render Engine
-                    </span>
+                    </div>
                     <div
                         className={`p-2 gap-2 flex items-center justify-center rounded-md backdrop-blur-md cursor-pointer select-none ${theme == 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
                         onClick={() => setViewGS(!viewGS)}
                     >
-                        <PlusCircleOutlined
-                            className={`transition-transform duration-250 ${viewGS ? 'rotate-45' : 'rotate-0'}`}
-                        />
+                        <PlusCircleOutlined />
                         {viewGS ? `Close` : `Load model`}
                     </div>
                     {viewGS && (
@@ -134,13 +138,18 @@ function App() {
                         </>
                     )}
                 </div>
-            </div>
-            <Viewer models={models} canvasRef={canvasRef} />
-            <div className={`flex gap-2 px-4 py-2 justify-center fixed top-0 right-0 z-10`}>
-                <ThemeSwitch />
                 <Screenshot canvasRef={canvasRef} theme={theme} />
+                <ThemeSwitch />
             </div>
+
+            <ClippingBoxUI
+                settings={volumeSettings}
+                setSettings={setVolumeSettings}
+                theme={theme}
+            />
+
             <Socials />
+            <Viewer models={models} canvasRef={canvasRef} volumeSettings={volumeSettings} />
         </>
     );
 }
