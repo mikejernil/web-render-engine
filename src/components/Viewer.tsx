@@ -42,21 +42,21 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) =>
                 <Grid
                     position={[0, -0.01, 0]}
                     args={[10.5, 10.5]}
-                    cellColor={theme == 'light' ? '#000' : '#fff'}
-                    sectionColor={theme == 'light' ? '#ff0000' : '#00ffff'}
+                    cellColor={theme == 'light' ? 'black' : 'white'}
+                    sectionColor={theme == 'light' ? 'black' : 'white'}
                     fadeDistance={20}
                     fadeStrength={1}
                     infiniteGrid
                 />
                 <OrbitControls makeDefault />
-                <GizmoHelper alignment="bottom-right" margin={[80, 100]}>
+                <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
                     <GizmoViewport
                         axisColors={
                             theme == 'light'
-                                ? ['#ff2060', '#20df80', '#2080ff']
-                                : ['#9d4b4b', '#2f7f4f', '#3b5b9d']
+                                ? ['black', 'black', 'black']
+                                : ['white', 'white', 'white']
                         }
-                        labelColor={theme == 'light' ? 'black' : 'white'}
+                        labelColor={theme == 'light' ? 'white' : 'black'}
                     />
                 </GizmoHelper>
 

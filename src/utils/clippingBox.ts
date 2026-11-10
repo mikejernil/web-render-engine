@@ -9,25 +9,14 @@ import {
 
 import { ClippingBoxFaces, ClippingFaceControlMetadata, VolumeSettings } from '../types';
 
-/** Maximum normalized radius of the procedural volume sphere. */
 const SPHERE_MAX_RADIUS = 0.95;
-
-/** Spatial frequency multiplier for trigonometric 3D noise. */
 const TRIG_NOISE_FREQUENCY = 12.0;
-
-/** Spatial frequency multiplier for concentric spherical shells. */
 const CONCENTRIC_SHELL_FREQUENCY = 10.0;
-
-/** Blending weight for the radial core intensity. */
 const CORE_INTENSITY_WEIGHT = 0.55;
-
-/** Blending weight for the concentric shell rings. */
 const CONCENTRIC_SHELL_WEIGHT = 0.35;
-
-/** Blending weight for the trigonometric noise pattern. */
 const TRIG_NOISE_WEIGHT = 0.2;
 
-/** Default unclipped [-1, 1] bounds for all 6 faces of the clipping cube. */
+/** Default [-1, 1] face bounds. */
 export const INITIAL_CLIPPING_BOX_FACES: ClippingBoxFaces = {
     xMinusSideFace: -1.0,
     xPlusSideFace: 1.0,
@@ -37,7 +26,7 @@ export const INITIAL_CLIPPING_BOX_FACES: ClippingBoxFaces = {
     zPlusFrontFace: 1.0,
 };
 
-/** Default volumetric render and clipping settings. */
+/** Default volume settings. */
 export const INITIAL_VOLUME_SETTINGS: VolumeSettings = {
     faces: { ...INITIAL_CLIPPING_BOX_FACES },
     showVolume: true,
@@ -48,7 +37,7 @@ export const INITIAL_VOLUME_SETTINGS: VolumeSettings = {
     colorPreset: 'anatomical',
 };
 
-/** Slider metadata pairing each minimum face with its opposing maximum face for clamping. */
+/** Face slider metadata. */
 export const CLIPPING_FACE_CONTROLS_METADATA: ReadonlyArray<ClippingFaceControlMetadata> = [
     {
         faceKey: 'xMinusSideFace',
@@ -88,7 +77,7 @@ export const CLIPPING_FACE_CONTROLS_METADATA: ReadonlyArray<ClippingFaceControlM
     },
 ];
 
-/** Vertex index pairs defining the 12 wireframe edges of an 8-corner hexahedron. */
+/** 12 edge index pairs for a cube. */
 export const BOX_EDGE_INDICES: ReadonlyArray<readonly [number, number]> = [
     [0, 1],
     [1, 2],
@@ -104,12 +93,7 @@ export const BOX_EDGE_INDICES: ReadonlyArray<readonly [number, number]> = [
     [3, 7],
 ];
 
-/**
- * Computes the 8 corner vertices of the clipping box from its 6 axis-aligned face bounds.
- *
- * @param faces - Current normalized positions of the 6 clipping planes.
- * @returns Array of 8 Three.js `Vector3` corner positions (4 back-face, 4 front-face).
- */
+/** Returns the 8 corners of the clipping box. */
 export function createVertexListFromFaces(faces: ClippingBoxFaces): Vector3[] {
     const {
         xMinusSideFace,
@@ -133,12 +117,7 @@ export function createVertexListFromFaces(faces: ClippingBoxFaces): Vector3[] {
     ];
 }
 
-/**
- * Builds a flat `Float32Array` of line-segment vertex coordinates for the 12 box edges.
- *
- * @param faces - Current normalized positions of the 6 clipping planes.
- * @returns `Float32Array` of 72 floats (12 edges * 2 vertices * 3 coordinates).
- */
+/** Builds line segment positions for the 12 box edges. */
 export function createWireframeEdgePositions(faces: ClippingBoxFaces): Float32Array {
     const vertexList = createVertexListFromFaces(faces);
     const edgePositions = new Float32Array(BOX_EDGE_INDICES.length * 6);
@@ -160,12 +139,7 @@ export function createWireframeEdgePositions(faces: ClippingBoxFaces): Float32Ar
     return edgePositions;
 }
 
-/**
- * Generates a procedural 3D `Data3DTexture` containing a multi-layered noisy sphere.
- *
- * @param gridSize - Voxel resolution along each axis (defaults to 64).
- * @returns Configured Three.js `Data3DTexture` ready for raymarching.
- */
+/** Generates a 3D noise sphere texture. */
 export function createSphereNoiseVolumeTexture(gridSize = 64): Data3DTexture {
     const voxelData = new Uint8Array(gridSize * gridSize * gridSize);
     const halfGrid = gridSize / 2;

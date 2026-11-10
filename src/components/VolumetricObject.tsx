@@ -21,13 +21,11 @@ import {
     createWireframeEdgePositions,
 } from '../utils/clippingBox';
 
-/** Props for the `VolumetricObject` component. */
+/** Props for VolumetricObject. */
 export interface VolumetricObjectProps {
-    /** Active clipping bounds and raycasting display settings. */
     settings: VolumeSettings;
 }
 
-/** Maps each `VolumeColorPreset` name to its integer uniform index in the fragment shader. */
 const COLOR_PRESET_TO_INDEX: Record<VolumeColorPreset, number> = {
     anatomical: 0,
     viridis: 1,
@@ -35,26 +33,21 @@ const COLOR_PRESET_TO_INDEX: Record<VolumeColorPreset, number> = {
     grayscale: 3,
 };
 
-/**
- * Renders the procedural 3D noise volume and its interactive wireframe clipping box
- * inside a React Three Fiber `<Canvas>`.
- */
+/** Renders the placeholder volume and wireframe clipping box. */
 const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
     const { camera } = useThree();
     const volumeMeshRef = useRef<Mesh>(null);
     const shaderMaterialRef = useRef<ShaderMaterial>(null);
 
-    // Generate the procedural 64^3 3D sphere noise texture once on mount.
+    // Create 3D noise texture once
     const volumeTexture = useMemo(() => createSphereNoiseVolumeTexture(64), []);
 
-    // Free GPU memory for the 3D texture when the texture instance changes or component unmounts.
+    // Dispose texture on unmount
     useEffect(() => {
-        return () => {
-            volumeTexture.dispose();
-        };
+        return () => volumeTexture.dispose();
     }, [volumeTexture]);
 
-    // Rebuild the 12-edge wireframe BufferGeometry whenever any of the 6 clipping faces move.
+    // Update wireframe geometry when faces change
     const clippingBoxGeometry = useMemo(() => {
         const positions = createWireframeEdgePositions(settings.faces);
         const geometry = new BufferGeometry();
@@ -62,14 +55,12 @@ const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
         return geometry;
     }, [settings.faces]);
 
-    // Dispose the previous wireframe GL buffer whenever `clippingBoxGeometry` is replaced or unmounts.
+    // Dispose old wireframe geometry
     useEffect(() => {
-        return () => {
-            clippingBoxGeometry.dispose();
-        };
+        return () => clippingBoxGeometry.dispose();
     }, [clippingBoxGeometry]);
 
-    // Create the static outer reference cube geometry once on mount.
+    // Static outer reference box geometry
     const outerReferenceBoxGeometry = useMemo(() => {
         const positions = createWireframeEdgePositions(INITIAL_CLIPPING_BOX_FACES);
         const geometry = new BufferGeometry();
@@ -77,14 +68,12 @@ const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
         return geometry;
     }, []);
 
-    // Dispose the static outer reference cube geometry on unmount.
+    // Dispose outer box geometry on unmount
     useEffect(() => {
-        return () => {
-            outerReferenceBoxGeometry.dispose();
-        };
+        return () => outerReferenceBoxGeometry.dispose();
     }, [outerReferenceBoxGeometry]);
 
-    // Initialize the shader uniform object once and keep the 3D texture reference bound.
+    // Shader uniforms
     const uniforms = useMemo(
         () => ({
             uVolumeTexture: { value: volumeTexture },
@@ -102,7 +91,7 @@ const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
         [volumeTexture],
     );
 
-    // Synchronize the local-space camera position and clipping box uniforms on every frame.
+    // Sync uniforms each frame
     useFrame(() => {
         if (!shaderMaterialRef.current || !volumeMeshRef.current) return;
 

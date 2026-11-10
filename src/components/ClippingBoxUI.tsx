@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ClippingBoxFaces, VolumeColorPreset, VolumeSettings } from '../types';
 import { CLIPPING_FACE_CONTROLS_METADATA, INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
 
-/** Props for the `ClippingBoxUI` control panel component. */
+/** Props for ClippingBoxUI. */
 export interface ClippingBoxUIProps {
     settings: VolumeSettings;
     setSettings: React.Dispatch<React.SetStateAction<VolumeSettings>>;
@@ -12,10 +12,7 @@ export interface ClippingBoxUIProps {
 
 const MINIMUM_FACE_SEPARATION = 0.05;
 
-/**
- * Floating glassmorphic control panel for adjusting the 6 clipping box faces
- * and volumetric raycasting appearance.
- */
+/** UI panel for volume clipping and appearance controls. */
 const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
     const [isPanelExpanded, setIsPanelExpanded] = useState(true);
 
@@ -61,7 +58,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
 
     return (
         <div
-            className={`fixed top-20 right-5 z-20 w-80 rounded-xl border p-4 shadow-xl backdrop-blur-md transition-all ${panelSurfaceClasses}`}
+            className={`fixed top-14 right-2 z-20 w-80 rounded-xl border p-4 shadow-xl backdrop-blur-md transition-all ${panelSurfaceClasses}`}
         >
             <div className="flex items-center justify-between">
                 <span className="text-sm font-bold tracking-wide uppercase">

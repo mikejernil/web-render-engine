@@ -1,14 +1,14 @@
-/** Supported 3D and volumetric model file formats. */
+/** Supported model formats. */
 export type ModelType = 'splat' | 'obj' | 'fbx' | 'volume';
 
-/** Metadata for a user-loaded scene model. */
+/** Scene model entry. */
 export interface Model {
     url: string;
     name: string;
     type: ModelType;
 }
 
-/** Normalized [-1, 1] plane offsets for each of the 6 clipping box faces. */
+/** Clipping plane bounds in [-1, 1]. */
 export interface ClippingBoxFaces {
     xMinusSideFace: number;
     xPlusSideFace: number;
@@ -18,10 +18,10 @@ export interface ClippingBoxFaces {
     zPlusFrontFace: number;
 }
 
-/** Available transfer-function colormap presets for the placeholder volume. */
+/** Volume color presets. */
 export type VolumeColorPreset = 'anatomical' | 'viridis' | 'thermal' | 'grayscale';
 
-/** Interactive state for the volumetric clipping box and raycasting parameters. */
+/** Volume render and clipping state. */
 export interface VolumeSettings {
     faces: ClippingBoxFaces;
     showVolume: boolean;
@@ -32,7 +32,7 @@ export interface VolumeSettings {
     colorPreset: VolumeColorPreset;
 }
 
-/** Configuration metadata for rendering a clamped clipping-face slider control. */
+/** Slider config for a clipping face. */
 export interface ClippingFaceControlMetadata {
     faceKey: keyof ClippingBoxFaces;
     displayLabel: string;
