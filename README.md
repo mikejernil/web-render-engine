@@ -24,16 +24,9 @@ Example Hosted Splat Url - https://huggingface.co/cakewalk/splat-data/resolve/ma
 - Deployed Vercel App
 
 ### Features we are looking to build 🚀
-- glTF loading (Local or URL)
-- Dynamic Skybox (Day/Night/Indoor UI selector) 
-- SPLAT loading (Local)
-- USD loading (Local)
-- Sample assets
-- Snapshot feature
-- Object selection & metadata panel (name, TRS etc.)
-- Scene editor
-- View dependent loading
-- Add Lights
+- Volumetric Data support (RAW)
+- Volumetric features
+- Additional volumetric formats (DICOM, NRRD, VDB) support 
 
 ### Render Engine - First Principles 🧊
 
