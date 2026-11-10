@@ -1,7 +1,7 @@
 # 🧊 Web Render Engine
 #### Created w/ `React + TypeScript + Vite` using Libraries - `React Three Fiber + Three.js + drei`
 
-Under Development by 3D ENGINERD. (https://www.3denginerd.com)
+Under Development by **3D ENGINERD.** (https://www.3denginerd.com)
 
 Originally created for Blog post (link) - https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
 
