@@ -1,9 +1,9 @@
 # 🧊 Web Render Engine
 #### Created w/ `React + TypeScript + Vite` using Libraries - `React Three Fiber + Three.js + drei`
 
-Created by Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/)
+Under Development by 3D ENGINERD. (https://www.3denginerd.com)
 
-For Blog post (link) - https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
+Originally created for Blog post (link) - https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
 
 ### Demo
 Hosted at https://webrenderengine.vercel.app/
