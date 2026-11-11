@@ -1,90 +1,78 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useState } from 'react';
 
-import * as THREE from 'three';
+import { Html } from '@react-three/drei';
 
-import { useFrame } from '@react-three/fiber';
-
-import fragmentShader from '../shaders/volume/fragment.glsl';
-import vertexShader from '../shaders/volume/vertex.glsl';
-
-/** Voxels per side of the volume. */
-const DIMENSION = 256;
-const VOXEL_COUNT = DIMENSION * DIMENSION * DIMENSION;
+import { useTheme } from '../context/ThemeContext';
+import { RenderFx } from '../types';
+import { VOXEL_COUNT } from '../utils/constants';
+import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
+import RaycastingFx from './volume/RaycastingFx';
+import { useWireframe } from './volume/useWireframe';
 
 export interface VolumetricRendererProps {
     /** One byte per voxel, 256^3 total. `null` while loading. */
     volumeData: Uint8Array | null;
 }
 
-/** Ray marches a raw 256^3 volume inside a unit cube. Use inside an R3F `<Canvas>`. */
-const VolumetricRenderer = ({ volumeData }: VolumetricRendererProps) => {
-    const meshRef = useRef<THREE.Mesh>(null);
-    const materialRef = useRef<THREE.ShaderMaterial>(null);
-    const cameraPosition = useMemo(() => new THREE.Vector3(), []);
+/** The Render FX list. Add an entry here and it shows up in the UI. */
+const RENDER_FX: RenderFx[] = [
+    { name: 'Raycasting', Effect: RaycastingFx },
+    { name: 'Marching Tetrahedra', Effect: MarchingTetrahedraFx, hasWireframe: true },
+];
 
-    const texture = useMemo(() => {
+/** Bold when on, dimmed when off. */
+const buttonClass = (active: boolean) =>
+    `px-2 py-0 bg-transparent ${active ? 'font-bold' : 'opacity-60'}`;
+
+/** Draws a raw 256^3 volume with the picked Render FX. Use inside an R3F `<Canvas>`. */
+const VolumetricRenderer = ({ volumeData }: VolumetricRendererProps) => {
+    const { theme } = useTheme();
+    const [activeFx, setActiveFx] = useState(0);
+    const { Effect, hasWireframe = false } = RENDER_FX[activeFx];
+    const [wireframe, setWireframe] = useWireframe(hasWireframe);
+
+    const voxels = useMemo(() => {
         if (!volumeData) return null;
 
         // fixed 256^3 buffer: extra bytes are cut off, missing bytes stay zero
         const data = new Uint8Array(VOXEL_COUNT);
         data.set(volumeData.subarray(0, VOXEL_COUNT));
 
-        const result = new THREE.Data3DTexture(data, DIMENSION, DIMENSION, DIMENSION);
-        result.format = THREE.RedFormat;
-        result.type = THREE.UnsignedByteType;
-        result.minFilter = THREE.LinearFilter;
-        result.magFilter = THREE.LinearFilter;
-        result.wrapS = THREE.ClampToEdgeWrapping;
-        result.wrapT = THREE.ClampToEdgeWrapping;
-        result.wrapR = THREE.ClampToEdgeWrapping;
-        result.needsUpdate = true;
-
-        return result;
+        return data;
     }, [volumeData]);
 
-    const uniforms = useMemo(
-        () => ({
-            uVolumeTexture: { value: null as THREE.Data3DTexture | null },
-            u_cameraPosition: { value: new THREE.Vector3() },
-            u_stepSize: {
-                value: new THREE.Vector3(1 / DIMENSION, 1 / DIMENSION, 1 / DIMENSION),
-            },
-        }),
-        [],
-    );
-
-    // Bind the current texture to the shader uniform, and free its GPU memory
-    // when the data changes or the component unmounts.
-    useEffect(() => {
-        uniforms.uVolumeTexture.value = texture;
-        return () => texture?.dispose();
-    }, [texture, uniforms]);
-
-    // Every frame, give the shader the camera position in the cube's local space
-    // so it can work out the ray direction for each pixel.
-    useFrame(({ camera }) => {
-        const mesh = meshRef.current;
-        const material = materialRef.current;
-        if (!mesh || !material) return;
-
-        camera.getWorldPosition(cameraPosition);
-        mesh.worldToLocal(cameraPosition);
-        material.uniforms.u_cameraPosition.value.copy(cameraPosition);
-    });
-
     return (
-        <mesh ref={meshRef}>
-            <boxGeometry args={[1, 1, 1]} />
-            <shaderMaterial
-                ref={materialRef}
-                uniforms={uniforms}
-                vertexShader={vertexShader}
-                fragmentShader={fragmentShader}
-                glslVersion={THREE.GLSL3}
-                transparent
-                side={THREE.FrontSide}
-            />
-        </mesh>
+        <>
+            {voxels && <Effect voxels={voxels} wireframe={wireframe} />}
+            <Html position={[0, 0.75, 0]} center>
+                <div
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md whitespace-nowrap select-none ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
+                >
+                    <span>Render FX -</span>
+                    {RENDER_FX.map(({ name }, index) => (
+                        <button
+                            key={name}
+                            className={buttonClass(index === activeFx)}
+                            onClick={() => setActiveFx(index)}
+                        >
+                            {name}
+                        </button>
+                    ))}
+                    {hasWireframe && (
+                        <>
+                            <span className="opacity-30">|</span>
+                            <button
+                                className={buttonClass(wireframe)}
+                                aria-pressed={wireframe}
+                                onClick={() => setWireframe(!wireframe)}
+                            >
+                                Wireframe (W)
+                            </button>
+                        </>
+                    )}
+                </div>
+            </Html>
+        </>
     );
 };
 
