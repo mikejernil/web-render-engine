@@ -1,31 +1,44 @@
-// Screenshot.tsx
-import React from 'react';
+import React, { useCallback } from 'react';
 
 interface ScreenshotProps {
     canvasRef: React.RefObject<HTMLCanvasElement>;
     theme: 'dark' | 'light';
+    setShowHelpers: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Screenshot: React.FC<ScreenshotProps> = ({ canvasRef, theme }) => {
-    const takeScreenshot = () => {
+/** Captures a clean canvas PNG with scene helpers hidden. */
+const Screenshot: React.FC<ScreenshotProps> = ({ canvasRef, theme, setShowHelpers }) => {
+    // Hide helpers, wait for next render, then save screenshot
+    const takeScreenshot = useCallback(() => {
         if (!canvasRef.current) return;
 
-        const canvas = canvasRef.current;
-        canvas.toBlob((blob) => {
-            if (blob) {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'canvas-screenshot.png';
-                link.click();
-                URL.revokeObjectURL(url);
+        setShowHelpers(false);
+
+        setTimeout(() => {
+            const canvas = canvasRef.current;
+            if (canvas) {
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'canvas-screenshot.png';
+                        link.click();
+                        URL.revokeObjectURL(url);
+                    }
+                    setShowHelpers(true);
+                }, 'image/png');
+            } else {
+                setShowHelpers(true);
             }
-        }, 'image/png');
-    };
+        }, 100);
+    }, [canvasRef, setShowHelpers]);
 
     return (
         <div
-            className={`p-2 rounded-md backdrop-blur-md cursor-pointer select-none ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
+            className={`p-2 rounded-md backdrop-blur-md cursor-pointer select-none ${
+                theme == 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'
+            }`}
             onClick={takeScreenshot}
         >
             Screenshot

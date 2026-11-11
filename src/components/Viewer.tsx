@@ -2,6 +2,7 @@ import React, { Suspense, useMemo } from 'react';
 
 import { FileLoader } from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 import {
@@ -9,71 +10,69 @@ import {
     GizmoViewport,
     Grid,
     OrbitControls,
+    PivotControls,
     Splat,
-    TransformControls,
 } from '@react-three/drei';
 import { Canvas, useLoader } from '@react-three/fiber';
 
 import { useTheme } from '../context/ThemeContext';
-import { Model } from '../types';
+import { Model, VolumeSettings } from '../types';
 import Skybox from './Skybox';
+import VolumetricObject from './VolumetricObject';
 import VolumetricRenderer from './VolumetricRenderer';
 
 interface ViewerProps {
     models: Model[];
     canvasRef: React.RefObject<HTMLCanvasElement>;
+    volumeSettings: VolumeSettings;
+    showHelpers: boolean;
 }
 
-const Viewer: React.FC<ViewerProps> = ({ models, canvasRef }) => {
+const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings, showHelpers }) => {
     const { theme } = useTheme();
 
     return (
-        <Canvas
-            ref={canvasRef}
-            style={{
-                width: '100vw',
-                height: '100vh',
-            }}
-            gl={{ preserveDrawingBuffer: true }}
-            camera={{ position: [0, 2, 4] }}
-        >
-            <ambientLight />
-            {models.map((model, index) => (
-                <Models key={index} model={model} />
-            ))}
-            <GizmoHelper alignment="bottom-right" margin={[60, 60]} renderPriority={1}>
-                <GizmoViewport
-                    axisColors={
-                        theme === 'dark' ? ['#fff', '#fff', '#fff'] : ['#000', '#000', '#000']
-                    }
-                    labelColor={theme === 'dark' ? 'black' : 'white'}
-                />
-            </GizmoHelper>
-            <Grid
-                position={[0, 0.01, 0]}
-                args={[10, 10]}
-                cellSize={0.5}
-                cellThickness={0.5}
-                cellColor={theme === 'light' ? '#333' : '#ddd'}
-                sectionSize={5}
-                sectionThickness={1.5}
-                sectionColor={theme === 'light' ? '#333' : '#ddd'}
-                fadeDistance={25}
-                fadeStrength={2}
-                followCamera={false}
-                infiniteGrid={true}
-            />
-            <Skybox type="HDRI" />
-            <ambientLight />
-            <pointLight position={[10, 10, 10]} />
-            <OrbitControls
-                makeDefault
-                maxPolarAngle={Math.PI / 1.6}
-                minDistance={1}
-                maxDistance={30}
-                enablePan={true}
-            />
-        </Canvas>
+        <div className="w-screen h-screen">
+            <Canvas
+                ref={canvasRef}
+                gl={{ preserveDrawingBuffer: true }}
+                camera={{ position: [5, 5, 5] }}
+            >
+                <Skybox type="HDRI" />
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[2, 2, 2]} intensity={1} />
+                {showHelpers && (
+                    <Grid
+                        position={[0, -0.01, 0]}
+                        args={[10.5, 10.5]}
+                        cellColor={theme == 'light' ? 'black' : 'white'}
+                        sectionColor={theme == 'light' ? 'black' : 'white'}
+                        fadeDistance={20}
+                        fadeStrength={1}
+                        infiniteGrid
+                    />
+                )}
+                <OrbitControls makeDefault />
+                {showHelpers && (
+                    <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
+                        <GizmoViewport
+                            axisColors={
+                                theme == 'light'
+                                    ? ['black', 'black', 'black']
+                                    : ['white', 'white', 'white']
+                            }
+                            labelColor={theme == 'light' ? 'white' : 'black'}
+                        />
+                    </GizmoHelper>
+                )}
+
+                <VolumetricObject settings={volumeSettings} showHelpers={showHelpers} />
+
+                {models.map((model, index) => (
+                    <Models key={index} model={model} showHelpers={showHelpers} />
+                ))}
+            </Canvas>
+        </div>
     );
 };
 
@@ -82,8 +81,8 @@ export default Viewer;
 function Box() {
     return (
         <mesh>
-            <boxGeometry />
-            <meshStandardMaterial />
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="orange" />
         </mesh>
     );
 }
@@ -100,6 +99,12 @@ function ObjModel({ url }: { url: string }) {
     return <primitive object={obj} />;
 }
 
+// GLB Model component
+function GlbModel({ url }: { url: string }) {
+    const gltf = useLoader(GLTFLoader, url);
+    return <primitive object={gltf.scene} />;
+}
+
 // Raw volume component
 function VolumeModel({ url }: { url: string }) {
     const buffer = useLoader(FileLoader, url, (loader) =>
@@ -109,29 +114,21 @@ function VolumeModel({ url }: { url: string }) {
     return <VolumetricRenderer volumeData={volumeData} />;
 }
 
-function Models({ model }: { model: Model }) {
+function Models({ model, showHelpers }: { model: Model; showHelpers: boolean }) {
     return (
         <Suspense fallback={<Box />}>
-            {model.type === 'splat' && (
-                <TransformControls mode="translate">
-                    <Splat alphaTest={0.1} position={[0, 0, 0]} src={model.url} />
-                </TransformControls>
-            )}
-            {model.type === 'fbx' && (
-                <TransformControls mode="translate">
-                    <FbxModel url={model.url} />
-                </TransformControls>
-            )}
-            {model.type === 'obj' && (
-                <TransformControls mode="translate">
-                    <ObjModel url={model.url} />
-                </TransformControls>
-            )}
-            {model.type === 'volume' && (
-                <TransformControls mode="translate">
-                    <VolumeModel url={model.url} />
-                </TransformControls>
-            )}
+            <PivotControls
+                visible={showHelpers}
+                enabled={showHelpers}
+                scale={0.75}
+                depthTest={false}
+            >
+                {model.type === 'splat' && <Splat src={model.url} />}
+                {model.type === 'fbx' && <FbxModel url={model.url} />}
+                {model.type === 'obj' && <ObjModel url={model.url} />}
+                {model.type === 'glb' && <GlbModel url={model.url} />}
+                {model.type === 'volume' && <VolumeModel url={model.url} />}
+            </PivotControls>
         </Suspense>
     );
 }
