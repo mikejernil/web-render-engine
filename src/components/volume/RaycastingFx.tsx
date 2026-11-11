@@ -52,7 +52,6 @@ const RaycastingFx = ({ voxels }: RenderFxProps) => {
                 fragmentShader={fragmentShader}
                 glslVersion={THREE.GLSL3}
                 transparent
-                side={THREE.FrontSide}
             />
         </mesh>
     );

@@ -8,6 +8,7 @@ const TYPING_FIELDS = 'input, textarea, select, [contenteditable]';
  * @returns The wireframe state and its setter.
  */
 export const useWireframe = (listenForKey: boolean) => {
+    const [wireframe, setWireframe] = useState(false);
 
     // Flip wireframe on W, unless typing in a field or holding a modifier key.
     useEffect(() => {

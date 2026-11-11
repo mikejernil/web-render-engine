@@ -20,7 +20,7 @@ const RENDER_FX: RenderFx[] = [
     { name: 'Marching Tetrahedra', Effect: MarchingTetrahedraFx, hasWireframe: true },
 ];
 
-/**
+/** Bold when on, dimmed when off. */
 const buttonClass = (active: boolean) =>
     `px-2 py-0 bg-transparent ${active ? 'font-bold' : 'opacity-60'}`;
 
