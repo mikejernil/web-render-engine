@@ -6,6 +6,7 @@ import {
     CUBE_TETRAHEDRA,
     DIMENSION,
     FLOATS_PER_VERTEX,
+    INITIAL_VERTEX_COUNT,
     ISO_VALUE,
 } from './constants';
 
@@ -21,7 +22,7 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
     const position = new THREE.Vector3();
     const normal = new THREE.Vector3();
 
-    let vertices = new Float32Array(FLOATS_PER_VERTEX * 1024 * 1024);
+    let vertices = new Float32Array(FLOATS_PER_VERTEX * INITIAL_VERTEX_COUNT);
     let used = 0;
 
     const sample = (x: number, y: number, z: number) => {

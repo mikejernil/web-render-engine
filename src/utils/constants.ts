@@ -1,5 +1,6 @@
 /** Voxels per side of the volume. */
 export const DIMENSION = 256;
+/** Voxels in the whole volume. */
 export const VOXEL_COUNT = DIMENSION * DIMENSION * DIMENSION;
 
 /** Density the surface is pulled out at, same as the desktop engine. */
@@ -8,6 +9,8 @@ export const ISO_VALUE = 48;
 export const CELL_SIZE = 2;
 /** Three for the position, three for the normal. */
 export const FLOATS_PER_VERTEX = 6;
+/** Vertices the mesh buffer starts with. It doubles whenever it fills up. */
+export const INITIAL_VERTEX_COUNT = 1024 * 1024;
 
 /** Where the 8 corners of a cell sit, in cell units. */
 export const CUBE_CORNERS = [

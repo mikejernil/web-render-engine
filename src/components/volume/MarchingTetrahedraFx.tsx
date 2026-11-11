@@ -24,6 +24,7 @@ const MarchingTetrahedraFx = ({ voxels }: RenderFxProps) => {
 
     return (
         <mesh geometry={surface}>
+            {/* triangle winding isn't consistent, so draw both faces */}
             <shaderMaterial
                 vertexShader={marchingTetrahedraVertex}
                 fragmentShader={marchingTetrahedraFragment}
