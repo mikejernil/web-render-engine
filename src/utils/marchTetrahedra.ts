@@ -1,19 +1,18 @@
 import * as THREE from 'three';
 
-import {
-    CELL_SIZE,
-    CUBE_CORNERS,
-    CUBE_TETRAHEDRA,
-    DIMENSION,
-    FLOATS_PER_VERTEX,
-    INITIAL_VERTEX_COUNT,
-    ISO_VALUE,
-} from './constants';
+import { CELL_SIZE, CUBE_CORNERS, CUBE_TETRAHEDRA, DIMENSION, ISO_VALUE } from './constants';
+
+/** Makes a buffer twice as big, keeping what is in it. */
+const grow = (buffer: Float32Array) => {
+    const bigger = new Float32Array(buffer.length * 2);
+    bigger.set(buffer);
+    return bigger;
+};
 
 /**
  * Pulls the iso-surface out of a volume as a plain triangle list.
  * @param voxels One byte per voxel, 256^3 total, x running fastest.
- * @returns Position and normal of every vertex, packed one after the other.
+ * @returns Position and normal of every vertex, three floats each, in two arrays.
  */
 export const marchTetrahedra = (voxels: Uint8Array) => {
     const values = new Uint8Array(CUBE_CORNERS.length);
@@ -22,7 +21,9 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
     const position = new THREE.Vector3();
     const normal = new THREE.Vector3();
 
-    let vertices = new Float32Array(FLOATS_PER_VERTEX * INITIAL_VERTEX_COUNT);
+    // room for 1M vertices to start with, doubled whenever it fills up
+    let positions = new Float32Array(3 * 1024 * 1024);
+    let normals = new Float32Array(positions.length);
     let used = 0;
 
     const sample = (x: number, y: number, z: number) => {
@@ -33,7 +34,7 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
     // adds the point where the surface crosses the edge between two corners
     const pushVertex = (a: number, b: number) => {
         const t = (ISO_VALUE - values[a]) / (values[b] - values[a]);
-        // voxel centres are half a voxel in, this keeps the mesh aligned with the ray marched cube
+        // voxel centres sit half a voxel in, matching the ray marched cube
         position
             .lerpVectors(corners[a], corners[b], t)
             .addScalar(0.5)
@@ -41,14 +42,13 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
             .subScalar(0.5);
         normal.lerpVectors(gradients[a], gradients[b], t).normalize();
 
-        if (used === vertices.length) {
-            const bigger = new Float32Array(vertices.length * 2);
-            bigger.set(vertices);
-            vertices = bigger;
+        if (used === positions.length) {
+            positions = grow(positions);
+            normals = grow(normals);
         }
-        position.toArray(vertices, used);
-        normal.toArray(vertices, used + 3);
-        used += FLOATS_PER_VERTEX;
+        position.toArray(positions, used);
+        normal.toArray(normals, used);
+        used += 3;
     };
 
     const marchCell = (x: number, y: number, z: number) => {
@@ -97,11 +97,9 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
 
     for (let z = 0; z + CELL_SIZE < DIMENSION; z += CELL_SIZE) {
         for (let y = 0; y + CELL_SIZE < DIMENSION; y += CELL_SIZE) {
-            for (let x = 0; x + CELL_SIZE < DIMENSION; x += CELL_SIZE) {
-                marchCell(x, y, z);
-            }
+            for (let x = 0; x + CELL_SIZE < DIMENSION; x += CELL_SIZE) marchCell(x, y, z);
         }
     }
 
-    return vertices.slice(0, used);
+    return { positions: positions.slice(0, used), normals: normals.slice(0, used) };
 };

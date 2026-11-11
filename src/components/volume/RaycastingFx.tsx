@@ -12,18 +12,12 @@ import { DIMENSION } from '../../utils/constants';
 /** Ray marches the volume inside a unit cube. */
 const RaycastingFx = ({ voxels }: RenderFxProps) => {
     const meshRef = useRef<THREE.Mesh>(null);
-    const materialRef = useRef<THREE.ShaderMaterial>(null);
-    const cameraPosition = useMemo(() => new THREE.Vector3(), []);
 
     const texture = useMemo(() => {
         const result = new THREE.Data3DTexture(voxels, DIMENSION, DIMENSION, DIMENSION);
         result.format = THREE.RedFormat;
-        result.type = THREE.UnsignedByteType;
         result.minFilter = THREE.LinearFilter;
         result.magFilter = THREE.LinearFilter;
-        result.wrapS = THREE.ClampToEdgeWrapping;
-        result.wrapT = THREE.ClampToEdgeWrapping;
-        result.wrapR = THREE.ClampToEdgeWrapping;
         result.needsUpdate = true;
 
         return result;
@@ -33,37 +27,26 @@ const RaycastingFx = ({ voxels }: RenderFxProps) => {
         () => ({
             uVolumeTexture: { value: null as THREE.Data3DTexture | null },
             u_cameraPosition: { value: new THREE.Vector3() },
-            u_stepSize: {
-                value: new THREE.Vector3(1 / DIMENSION, 1 / DIMENSION, 1 / DIMENSION),
-            },
+            u_stepSize: { value: new THREE.Vector3().setScalar(1 / DIMENSION) },
         }),
         [],
     );
 
-    // Bind the current texture to the shader uniform, and free its GPU memory
-    // when the data changes or the component unmounts.
+    // Bind the texture to the shader, and free its GPU memory when it changes or on unmount.
     useEffect(() => {
         uniforms.uVolumeTexture.value = texture;
         return () => texture.dispose();
     }, [texture, uniforms]);
 
-    // Every frame, give the shader the camera position in the cube's local space
-    // so it can work out the ray direction for each pixel.
+    // Every frame, put the camera in the cube's local space so the shader can get ray directions.
     useFrame(({ camera }) => {
-        const mesh = meshRef.current;
-        const material = materialRef.current;
-        if (!mesh || !material) return;
-
-        camera.getWorldPosition(cameraPosition);
-        mesh.worldToLocal(cameraPosition);
-        material.uniforms.u_cameraPosition.value.copy(cameraPosition);
+        meshRef.current?.worldToLocal(camera.getWorldPosition(uniforms.u_cameraPosition.value));
     });
 
     return (
         <mesh ref={meshRef}>
-            <boxGeometry args={[1, 1, 1]} />
+            <boxGeometry />
             <shaderMaterial
-                ref={materialRef}
                 uniforms={uniforms}
                 vertexShader={vertexShader}
                 fragmentShader={fragmentShader}

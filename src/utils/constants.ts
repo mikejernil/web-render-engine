@@ -5,12 +5,8 @@ export const VOXEL_COUNT = DIMENSION * DIMENSION * DIMENSION;
 
 /** Density the surface is pulled out at, same as the desktop engine. */
 export const ISO_VALUE = 48;
-/** Voxels per marching cell. 2 gives 128 cells a side, same as the desktop engine. */
+/** Voxels per marching cell, so 128 cells a side like the desktop engine. */
 export const CELL_SIZE = 2;
-/** Three for the position, three for the normal. */
-export const FLOATS_PER_VERTEX = 6;
-/** Vertices the mesh buffer starts with. It doubles whenever it fills up. */
-export const INITIAL_VERTEX_COUNT = 1024 * 1024;
 
 /** Where the 8 corners of a cell sit, in cell units. */
 export const CUBE_CORNERS = [
@@ -24,7 +20,7 @@ export const CUBE_CORNERS = [
     [0, 1, 1],
 ];
 
-/** Six tetrahedra around the 0-6 diagonal, which line up across cells so there are no cracks. */
+/** Six tetrahedra sharing the 0-6 diagonal, so neighbouring cells line up. */
 export const CUBE_TETRAHEDRA = [
     [0, 5, 1, 6],
     [0, 1, 2, 6],

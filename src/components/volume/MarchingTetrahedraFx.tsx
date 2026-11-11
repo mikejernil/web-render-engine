@@ -5,18 +5,15 @@ import * as THREE from 'three';
 import marchingTetrahedraFragment from '../../shaders/volume/marchingTetrahedraFragment.glsl';
 import marchingTetrahedraVertex from '../../shaders/volume/marchingTetrahedraVertex.glsl';
 import { RenderFxProps } from '../../types';
-import { FLOATS_PER_VERTEX } from '../../utils/constants';
 import { marchTetrahedra } from '../../utils/marchTetrahedra';
 
 /** Draws the volume's iso-surface as a marching tetrahedra mesh. */
-const MarchingTetrahedraFx = ({ voxels }: RenderFxProps) => {
+const MarchingTetrahedraFx = ({ voxels, wireframe }: RenderFxProps) => {
     const surface = useMemo(() => {
-        const vertices = new THREE.InterleavedBuffer(marchTetrahedra(voxels), FLOATS_PER_VERTEX);
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(vertices, 3, 0));
-        geometry.setAttribute('normal', new THREE.InterleavedBufferAttribute(vertices, 3, 3));
-
-        return geometry;
+        const { positions, normals } = marchTetrahedra(voxels);
+        return new THREE.BufferGeometry()
+            .setAttribute('position', new THREE.BufferAttribute(positions, 3))
+            .setAttribute('normal', new THREE.BufferAttribute(normals, 3));
     }, [voxels]);
 
     // Free the mesh from the GPU when the effect is switched off or the data changes.
@@ -30,6 +27,7 @@ const MarchingTetrahedraFx = ({ voxels }: RenderFxProps) => {
                 fragmentShader={marchingTetrahedraFragment}
                 glslVersion={THREE.GLSL3}
                 side={THREE.DoubleSide}
+                wireframe={wireframe}
             />
         </mesh>
     );
