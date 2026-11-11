@@ -17,13 +17,14 @@ import clippingVertexShader from '../shaders/volume/clippingVertex.glsl';
 import { VolumeColorPreset, VolumeSettings } from '../types';
 import {
     INITIAL_CLIPPING_BOX_FACES,
-    createSphereNoiseVolumeTexture,
+    createVolumeTextureByShape,
     createWireframeEdgePositions,
 } from '../utils/clippingBox';
 
 /** Props for VolumetricObject. */
 export interface VolumetricObjectProps {
     settings: VolumeSettings;
+    showHelpers: boolean;
 }
 
 const COLOR_PRESET_TO_INDEX: Record<VolumeColorPreset, number> = {
@@ -34,16 +35,22 @@ const COLOR_PRESET_TO_INDEX: Record<VolumeColorPreset, number> = {
 };
 
 /** Renders the placeholder volume and wireframe clipping box. */
-const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
+const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings, showHelpers }) => {
     const { camera } = useThree();
     const volumeMeshRef = useRef<Mesh>(null);
     const shaderMaterialRef = useRef<ShaderMaterial>(null);
 
-    // Create 3D noise texture once
-    const volumeTexture = useMemo(() => createSphereNoiseVolumeTexture(64), []);
+    // Generate 3D texture for the active shape preset
+    const volumeTexture = useMemo(
+        () => createVolumeTextureByShape(settings.shapePreset, 64),
+        [settings.shapePreset],
+    );
 
-    // Dispose texture on unmount
+    // Dispose texture when preset changes or component unmounts
     useEffect(() => {
+        if (shaderMaterialRef.current) {
+            shaderMaterialRef.current.uniforms.uVolumeTexture.value = volumeTexture;
+        }
         return () => volumeTexture.dispose();
     }, [volumeTexture]);
 
@@ -73,7 +80,7 @@ const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
         return () => outerReferenceBoxGeometry.dispose();
     }, [outerReferenceBoxGeometry]);
 
-    // Shader uniforms
+    // Initialize shader uniforms
     const uniforms = useMemo(
         () => ({
             uVolumeTexture: { value: volumeTexture },
@@ -88,7 +95,7 @@ const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
             uOpacity: { value: settings.opacity },
             uColorPreset: { value: COLOR_PRESET_TO_INDEX[settings.colorPreset] },
         }),
-        [volumeTexture],
+        [],
     );
 
     // Sync uniforms each frame
@@ -129,13 +136,13 @@ const VolumetricObject: React.FC<VolumetricObjectProps> = ({ settings }) => {
                 </mesh>
             )}
 
-            {settings.showOuterReferenceBox && (
+            {showHelpers && settings.showOuterReferenceBox && (
                 <lineSegments geometry={outerReferenceBoxGeometry}>
                     <lineBasicMaterial color="#888888" transparent opacity={0.45} />
                 </lineSegments>
             )}
 
-            {settings.showClippingBox && (
+            {showHelpers && settings.showClippingBox && (
                 <lineSegments geometry={clippingBoxGeometry}>
                     <lineBasicMaterial color="#00e5ff" />
                 </lineSegments>

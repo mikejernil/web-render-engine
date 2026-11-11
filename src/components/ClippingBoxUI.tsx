@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 
-import { ClippingBoxFaces, VolumeColorPreset, VolumeSettings } from '../types';
+import { SlidersOutlined } from '@ant-design/icons';
+
+import { ClippingBoxFaces, VolumeColorPreset, VolumeSettings, VolumeShapePreset } from '../types';
 import { CLIPPING_FACE_CONTROLS_METADATA, INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
+import { VOLUME_VARIATIONS } from '../utils/sampleModels';
 
 /** Props for ClippingBoxUI. */
 export interface ClippingBoxUIProps {
@@ -12,9 +15,16 @@ export interface ClippingBoxUIProps {
 
 const MINIMUM_FACE_SEPARATION = 0.05;
 
+const COLOR_PRESETS: ReadonlyArray<{ id: VolumeColorPreset; label: string }> = [
+    { id: 'anatomical', label: 'Anatomical' },
+    { id: 'viridis', label: 'Viridis' },
+    { id: 'thermal', label: 'Thermal' },
+    { id: 'grayscale', label: 'Grayscale' },
+];
+
 /** UI panel for volume clipping and appearance controls. */
 const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
-    const [isPanelExpanded, setIsPanelExpanded] = useState(true);
+    const [isOpen, setIsOpen] = useState(true);
 
     const updateClippingFaceBound = (
         faceKey: keyof ClippingBoxFaces,
@@ -46,95 +56,131 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
         }));
     };
 
-    const panelSurfaceClasses =
-        theme === 'light'
-            ? 'bg-white/90 text-gray-900 border-gray-300'
-            : 'bg-zinc-900/90 text-gray-100 border-zinc-700';
+    const setVolumeShape = (shapePreset: VolumeShapePreset) => {
+        setSettings((previous) => ({
+            ...previous,
+            shapePreset,
+            showVolume: true,
+        }));
+    };
 
-    const inputSurfaceClasses =
-        theme === 'light'
-            ? 'bg-gray-100 border-gray-300 text-gray-900'
-            : 'bg-zinc-800 border-zinc-600 text-gray-100';
+    const glassContainerClass =
+        theme === 'dark'
+            ? 'bg-white/10 text-white border-white/10'
+            : 'bg-black/10 text-black border-black/10';
+
+    const glassButtonClass =
+        theme === 'dark'
+            ? 'bg-white/10 hover:bg-white/20 text-white'
+            : 'bg-black/10 hover:bg-black/20 text-black';
+
+    const activePillClass =
+        theme === 'dark'
+            ? 'bg-white/30 text-white font-semibold'
+            : 'bg-black/25 text-black font-semibold';
+
+    const sliderTrackClass =
+        theme === 'dark' ? 'bg-white/25 accent-white' : 'bg-black/25 accent-black';
+
+    const dividerClass = theme === 'light' ? 'bg-black/30' : 'bg-white/30';
 
     return (
-        <div
-            className={`fixed top-14 right-2 z-20 w-80 rounded-xl border p-4 shadow-xl backdrop-blur-md transition-all ${panelSurfaceClasses}`}
-        >
-            <div className="flex items-center justify-between">
-                <span className="text-sm font-bold tracking-wide uppercase">
-                    Volumetric Clipping Box
-                </span>
-                <button
-                    type="button"
-                    onClick={() => setIsPanelExpanded(!isPanelExpanded)}
-                    className="px-2 py-1 text-xs rounded border border-current opacity-80 hover:opacity-100"
-                >
-                    {isPanelExpanded ? 'Hide' : 'Show'}
-                </button>
+        <div className="fixed top-14 right-2 z-10 w-72 flex flex-col gap-2 select-none">
+            <div
+                className={`p-2 gap-2 flex items-center justify-center rounded-md backdrop-blur-md cursor-pointer ${glassButtonClass}`}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <SlidersOutlined />
+                {isOpen ? 'Close Clipping Box' : 'Volume Clipping'}
             </div>
 
-            {isPanelExpanded && (
-                <div className="mt-3 space-y-3 text-xs max-h-[75vh] overflow-y-auto pr-1">
-                    <div className="space-y-1.5 border-b border-current/15 pb-3">
-                        <label className="flex items-center justify-between cursor-pointer">
-                            <span>Show Volumetric Object</span>
-                            <input
-                                type="checkbox"
-                                checked={settings.showVolume}
-                                onChange={(event) =>
-                                    setSettings((previous) => ({
-                                        ...previous,
-                                        showVolume: event.target.checked,
-                                    }))
-                                }
-                            />
-                        </label>
-
-                        <label className="flex items-center justify-between cursor-pointer">
-                            <span>Show Clipping Box Wireframe</span>
-                            <input
-                                type="checkbox"
-                                checked={settings.showClippingBox}
-                                onChange={(event) =>
-                                    setSettings((previous) => ({
-                                        ...previous,
-                                        showClippingBox: event.target.checked,
-                                    }))
-                                }
-                            />
-                        </label>
-
-                        <label className="flex items-center justify-between cursor-pointer">
-                            <span>Show Outer Reference Cube</span>
-                            <input
-                                type="checkbox"
-                                checked={settings.showOuterReferenceBox}
-                                onChange={(event) =>
-                                    setSettings((previous) => ({
-                                        ...previous,
-                                        showOuterReferenceBox: event.target.checked,
-                                    }))
-                                }
-                            />
-                        </label>
+            {isOpen && (
+                <div
+                    className={`p-3 rounded-md border border-solid backdrop-blur-md flex flex-col gap-2.5 text-xs max-h-[78vh] overflow-y-auto ${glassContainerClass}`}
+                >
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {VOLUME_VARIATIONS.map((variation) => {
+                            const isSelected =
+                                settings.showVolume && settings.shapePreset === variation.id;
+                            return (
+                                <div
+                                    key={variation.id}
+                                    onClick={() => setVolumeShape(variation.id)}
+                                    className={`p-2 rounded-md cursor-pointer text-center transition-colors ${
+                                        isSelected ? activePillClass : glassButtonClass
+                                    }`}
+                                >
+                                    <div>{variation.name}</div>
+                                    <div className="text-[10px] opacity-70">
+                                        {variation.subtitle}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
 
-                    <div className="space-y-2 border-b border-current/15 pb-3">
-                        <div className="flex items-center justify-between">
-                            <span className="font-semibold">Box Face Clipping Bounds</span>
-                            <button
-                                type="button"
-                                onClick={resetAllClippingFaces}
-                                className="px-2 py-0.5 text-[11px] rounded border border-current/40 hover:border-current"
-                            >
-                                Reset Box
-                            </button>
+                    <div className="grid grid-cols-3 gap-1.5">
+                        <div
+                            onClick={() =>
+                                setSettings((prev) => ({
+                                    ...prev,
+                                    showVolume: !prev.showVolume,
+                                }))
+                            }
+                            className={`p-1.5 rounded-md cursor-pointer text-center transition-colors ${
+                                settings.showVolume ? activePillClass : glassButtonClass
+                            }`}
+                        >
+                            Volume
                         </div>
+                        <div
+                            onClick={() =>
+                                setSettings((prev) => ({
+                                    ...prev,
+                                    showClippingBox: !prev.showClippingBox,
+                                }))
+                            }
+                            className={`p-1.5 rounded-md cursor-pointer text-center transition-colors ${
+                                settings.showClippingBox ? activePillClass : glassButtonClass
+                            }`}
+                        >
+                            Clip Box
+                        </div>
+                        <div
+                            onClick={() =>
+                                setSettings((prev) => ({
+                                    ...prev,
+                                    showOuterReferenceBox: !prev.showOuterReferenceBox,
+                                }))
+                            }
+                            className={`p-1.5 rounded-md cursor-pointer text-center transition-colors ${
+                                settings.showOuterReferenceBox ? activePillClass : glassButtonClass
+                            }`}
+                        >
+                            Bounds
+                        </div>
+                    </div>
 
+                    <div className={`h-[1px] w-full ${dividerClass}`} />
+
+                    <div className="flex items-center justify-between">
+                        <span className="font-semibold">Clip Faces</span>
+                        <div
+                            onClick={resetAllClippingFaces}
+                            className={`px-2 py-1 rounded-md cursor-pointer ${glassButtonClass}`}
+                        >
+                            Reset
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
                         {CLIPPING_FACE_CONTROLS_METADATA.map((controlItem) => {
                             const currentFaceValue = settings.faces[controlItem.faceKey];
                             return (
-                                <div key={controlItem.faceKey} className="space-y-0.5">
+                                <div
+                                    key={controlItem.faceKey}
+                                    className={`px-2.5 py-1.5 rounded-md flex flex-col gap-1 ${glassButtonClass}`}
+                                >
                                     <div className="flex justify-between text-[11px]">
                                         <span>{controlItem.displayLabel}</span>
                                         <span className="font-mono">
@@ -155,17 +201,19 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                                 controlItem.pairedFaceKey,
                                             )
                                         }
-                                        className="w-full cursor-pointer accent-cyan-500"
+                                        className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer ${sliderTrackClass}`}
                                     />
                                 </div>
                             );
                         })}
                     </div>
 
-                    <div className="space-y-2">
-                        <span className="font-semibold block">Raycasting Appearance</span>
+                    <div className={`h-[1px] w-full ${dividerClass}`} />
 
-                        <div className="space-y-0.5">
+                    <div className="flex flex-col gap-1.5">
+                        <div
+                            className={`px-2.5 py-1.5 rounded-md flex flex-col gap-1 ${glassButtonClass}`}
+                        >
                             <div className="flex justify-between text-[11px]">
                                 <span>Density Threshold</span>
                                 <span className="font-mono">
@@ -175,7 +223,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                             <input
                                 type="range"
                                 min={0.01}
-                                max={0.95}
+                                max={0.9}
                                 step={0.01}
                                 value={settings.densityThreshold}
                                 onChange={(event) =>
@@ -184,13 +232,15 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                         densityThreshold: parseFloat(event.target.value),
                                     }))
                                 }
-                                className="w-full cursor-pointer accent-cyan-500"
+                                className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer ${sliderTrackClass}`}
                             />
                         </div>
 
-                        <div className="space-y-0.5">
+                        <div
+                            className={`px-2.5 py-1.5 rounded-md flex flex-col gap-1 ${glassButtonClass}`}
+                        >
                             <div className="flex justify-between text-[11px]">
-                                <span>Volume Opacity</span>
+                                <span>Opacity</span>
                                 <span className="font-mono">{settings.opacity.toFixed(2)}</span>
                             </div>
                             <input
@@ -205,28 +255,30 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                         opacity: parseFloat(event.target.value),
                                     }))
                                 }
-                                className="w-full cursor-pointer accent-cyan-500"
+                                className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer ${sliderTrackClass}`}
                             />
                         </div>
+                    </div>
 
-                        <div className="flex items-center justify-between pt-1">
-                            <span>Colormap</span>
-                            <select
-                                value={settings.colorPreset}
-                                onChange={(event) =>
-                                    setSettings((previous) => ({
-                                        ...previous,
-                                        colorPreset: event.target.value as VolumeColorPreset,
+                    <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                        {COLOR_PRESETS.map((preset) => (
+                            <div
+                                key={preset.id}
+                                onClick={() =>
+                                    setSettings((prev) => ({
+                                        ...prev,
+                                        colorPreset: preset.id,
                                     }))
                                 }
-                                className={`rounded border px-2 py-1 text-xs ${inputSurfaceClasses}`}
+                                className={`p-1.5 rounded-md cursor-pointer text-center transition-colors ${
+                                    settings.colorPreset === preset.id
+                                        ? activePillClass
+                                        : glassButtonClass
+                                }`}
                             >
-                                <option value="anatomical">Anatomical</option>
-                                <option value="viridis">Viridis</option>
-                                <option value="thermal">Thermal</option>
-                                <option value="grayscale">Grayscale</option>
-                            </select>
-                        </div>
+                                {preset.label}
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

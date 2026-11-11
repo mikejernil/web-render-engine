@@ -1,23 +1,43 @@
-import { BackSide, LinearFilter, MathUtils, ShaderLib, Vector3 } from 'three';
+import { useMemo } from 'react';
+
+import {
+    BackSide,
+    EquirectangularReflectionMapping,
+    LinearFilter,
+    MathUtils,
+    ShaderLib,
+    Vector3,
+} from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Sky } from 'three/examples/jsm/objects/Sky';
 
 import { extend, useLoader } from '@react-three/fiber';
 
-import { useTheme } from '../context/ThemeContext';
-
 extend({ Sky });
 
+const SHARED_HDRI_PATH = '/assets/kloofendal_28d_misty_puresky_2k.hdr';
+
 const HDRISky = () => {
-    //darkmode
-    const { theme } = useTheme();
+    const texture = useLoader(RGBELoader, SHARED_HDRI_PATH);
 
-    const hdrPath = `/assets/${theme === 'dark' ? 'kloppenheim_02_puresky_2k' : 'kloofendal_28d_misty_puresky_2k'}.hdr`;
+    // Configure texture filtering once loaded
+    useMemo(() => {
+        texture.mapping = EquirectangularReflectionMapping;
+        texture.magFilter = LinearFilter;
+        texture.minFilter = LinearFilter;
+        texture.needsUpdate = true;
+    }, [texture]);
 
-    const texture = useLoader(RGBELoader, hdrPath);
-    texture.magFilter = LinearFilter;
-    texture.minFilter = LinearFilter;
     const shader = ShaderLib.equirect;
+
+    // Clone equirect uniforms so global ShaderLib state is not mutated
+    const uniforms = useMemo(
+        () => ({
+            ...shader.uniforms,
+            tEquirect: { value: texture },
+        }),
+        [shader.uniforms, texture],
+    );
 
     return (
         <mesh>
@@ -25,8 +45,7 @@ const HDRISky = () => {
             <shaderMaterial
                 fragmentShader={shader.fragmentShader}
                 vertexShader={shader.vertexShader}
-                uniforms={shader.uniforms}
-                uniforms-tEquirect-value={texture}
+                uniforms={uniforms}
                 depthWrite={false}
                 side={BackSide}
             />
@@ -40,7 +59,6 @@ const ShaderSky = () => {
     const azimuth = -150;
     const phi = MathUtils.degToRad(90 - elevation);
     const theta = MathUtils.degToRad(azimuth);
-
     sun.setFromSphericalCoords(1, phi, theta);
 
     //@ts-expect-error undefined type error sky from drei
@@ -48,7 +66,7 @@ const ShaderSky = () => {
 };
 
 const Skybox = (props: { type: 'SHADER' | 'HDRI' }) => {
-    return props.type == 'SHADER' ? <ShaderSky /> : <HDRISky />;
+    return props.type === 'SHADER' ? <ShaderSky /> : <HDRISky />;
 };
 
 export default Skybox;
