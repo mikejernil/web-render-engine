@@ -17,7 +17,6 @@ import { Canvas, useLoader } from '@react-three/fiber';
 import { useTheme } from '../context/ThemeContext';
 import { Model, VolumeSettings } from '../types';
 import Skybox from './Skybox';
-import VolumetricObject from './VolumetricObject';
 import VolumetricRenderer from './VolumetricRenderer';
 
 interface ViewerProps {
@@ -60,10 +59,8 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) =>
                     />
                 </GizmoHelper>
 
-                <VolumetricObject settings={volumeSettings} />
-
                 {models.map((model, index) => (
-                    <Models key={index} model={model} />
+                    <Models key={index} model={model} volumeSettings={volumeSettings} />
                 ))}
             </Canvas>
         </div>
@@ -94,15 +91,15 @@ function ObjModel({ url }: { url: string }) {
 }
 
 // Raw volume component
-function VolumeModel({ url }: { url: string }) {
+function VolumeModel({ url, volumeSettings }: { url: string; volumeSettings: VolumeSettings }) {
     const buffer = useLoader(FileLoader, url, (loader) =>
         (loader as FileLoader).setResponseType('arraybuffer'),
     ) as ArrayBuffer;
     const volumeData = useMemo(() => new Uint8Array(buffer), [buffer]);
-    return <VolumetricRenderer volumeData={volumeData} />;
+    return <VolumetricRenderer volumeData={volumeData} volumeSettings={volumeSettings} />;
 }
 
-function Models({ model }: { model: Model }) {
+function Models({ model, volumeSettings }: { model: Model; volumeSettings: VolumeSettings }) {
     return (
         <Suspense fallback={<Box />}>
             {model.type === 'splat' && (
@@ -122,7 +119,7 @@ function Models({ model }: { model: Model }) {
             )}
             {model.type === 'volume' && (
                 <TransformControls mode="translate">
-                    <VolumeModel url={model.url} />
+                    <VolumeModel url={model.url} volumeSettings={volumeSettings} />
                 </TransformControls>
             )}
         </Suspense>
