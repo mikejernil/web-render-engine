@@ -7,6 +7,8 @@ import { RenderFx } from '../types';
 import { VOXEL_COUNT } from '../utils/constants';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
+import Basic3DTexture from './volume/Basic3DTexture';
+import ColormapFx from './volume/ColormapFx';
 import { useWireframe } from './volume/useWireframe';
 
 export interface VolumetricRendererProps {
@@ -16,6 +18,8 @@ export interface VolumetricRendererProps {
 
 /** The Render FX list. Add an entry here and it shows up in the UI. */
 const RENDER_FX: RenderFx[] = [
+    { name: '3DTextureSlicing', Effect: Basic3DTexture },
+    { name: 'Colormap', Effect: ColormapFx },
     { name: 'Raycasting', Effect: RaycastingFx },
     { name: 'Marching Tetrahedra', Effect: MarchingTetrahedraFx, hasWireframe: true },
 ];
