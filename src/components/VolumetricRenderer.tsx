@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useState } from 'react';
 
-import * as THREE from 'three';
-
+import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 
 import fragmentShader from '../shaders/volume/fragment.glsl';
@@ -19,13 +18,24 @@ export interface VolumetricRendererProps {
     volumeSettings: VolumeSettings;
 }
 
-/** Ray marches a raw 256^3 volume inside a unit cube. Use inside an R3F `<Canvas>`. */
-const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererProps) => {
-    const meshRef = useRef<THREE.Mesh>(null);
-    const materialRef = useRef<THREE.ShaderMaterial>(null);
-    const cameraPosition = useMemo(() => new THREE.Vector3(), []);
+/** The Render FX list. Add an entry here and it shows up in the UI. */
+const RENDER_FX: RenderFx[] = [
+    { name: 'Raycasting', Effect: RaycastingFx },
+    { name: 'Marching Tetrahedra', Effect: MarchingTetrahedraFx, hasWireframe: true },
+];
 
-    const texture = useMemo(() => {
+/** Bold when on, dimmed when off. */
+const buttonClass = (active: boolean) =>
+    `px-2 py-0 bg-transparent ${active ? 'font-bold' : 'opacity-60'}`;
+
+/** Draws a raw 256^3 volume with the picked Render FX. Use inside an R3F `<Canvas>`. */
+const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererProps) => {
+    const { theme } = useTheme();
+    const [activeFx, setActiveFx] = useState(0);
+    const { Effect, hasWireframe = false } = RENDER_FX[activeFx];
+    const [wireframe, setWireframe] = useWireframe(hasWireframe);
+
+    const voxels = useMemo(() => {
         if (!volumeData) return null;
 
         // fixed 256^3 buffer: extra bytes are cut off, missing bytes stay zero
@@ -42,6 +52,7 @@ const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererPr
         result.wrapR = THREE.ClampToEdgeWrapping;
         result.needsUpdate = true;
         return result;
+        return data;
     }, [volumeData]);
 
     // Build wireframe geometry when clipping faces change.
