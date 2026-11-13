@@ -51,36 +51,18 @@ const VolumetricRenderer = ({
         if (!volumeData) return null;
 
         const detectedFormat = detectFormat(volumeData);
+        const maxValue = getMaxValueForFormat(detectedFormat);
         const srcData = volumeData.subarray(0, voxelCount);
 
-        let textureType: THREE.TextureDataType;
-        let textureData: Uint8Array | Uint16Array | Uint32Array | Float32Array;
-
-        switch (detectedFormat) {
-            case 'uint8':
-                textureType = THREE.UnsignedByteType;
-                textureData = srcData as Uint8Array;
-                break;
-            case 'uint16':
-                textureType = THREE.UnsignedShortType;
-                textureData = srcData as Uint16Array;
-                break;
-            case 'uint32':
-                textureType = THREE.UnsignedIntType;
-                textureData = srcData as Uint32Array;
-                break;
-            case 'float32':
-                textureType = THREE.FloatType;
-                textureData = srcData as Float32Array;
-                break;
-            default:
-                textureType = THREE.UnsignedByteType;
-                textureData = srcData as Uint8Array;
+        // Normalize to [0, 1] range for shader
+        const normalized = new Float32Array(voxelCount);
+        for (let i = 0; i < srcData.length; i++) {
+            normalized[i] = srcData[i] / maxValue;
         }
 
-        const result = new THREE.Data3DTexture(textureData, dimX, dimY, dimZ);
+        const result = new THREE.Data3DTexture(normalized, dimX, dimY, dimZ);
         result.format = THREE.RedFormat;
-        result.type = textureType;
+        result.type = THREE.FloatType;
         result.minFilter = THREE.LinearFilter;
         result.magFilter = THREE.LinearFilter;
         result.wrapS = THREE.ClampToEdgeWrapping;
@@ -98,7 +80,6 @@ const VolumetricRenderer = ({
             u_stepSize: {
                 value: new THREE.Vector3(1.0 / dimX, 1.0 / dimY, 1.0 / dimZ),
             },
-            u_maxValue: { value: 255.0 },
         }),
         [dimX, dimY, dimZ],
     );
@@ -106,16 +87,11 @@ const VolumetricRenderer = ({
     // Bind the current texture to the shader uniform, and free its GPU memory
     // when the data changes or the component unmounts.
     useEffect(() => {
-        if (!volumeData) return;
-
-        const detectedFormat = detectFormat(volumeData);
-        const maxValue = getMaxValueForFormat(detectedFormat);
-
         uniforms.uVolumeTexture.value = texture;
-        uniforms.u_maxValue.value = maxValue;
-
-        return () => texture?.dispose();
-    }, [texture, uniforms, volumeData]);
+        return () => {
+            if (texture) texture.dispose();
+        };
+    }, [texture, uniforms]);
 
     // Every frame, give the shader the camera position in the cube's local space
     // so it can work out the ray direction for each pixel.
