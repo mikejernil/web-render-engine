@@ -15,65 +15,55 @@ import {
 import { Canvas, useLoader } from '@react-three/fiber';
 
 import { useTheme } from '../context/ThemeContext';
-import { Model } from '../types';
+import { Model, VolumeSettings } from '../types';
 import Skybox from './Skybox';
 import VolumetricRenderer from './VolumetricRenderer';
 
 interface ViewerProps {
     models: Model[];
     canvasRef: React.RefObject<HTMLCanvasElement>;
+    volumeSettings: VolumeSettings;
 }
 
-const Viewer: React.FC<ViewerProps> = ({ models, canvasRef }) => {
+const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) => {
     const { theme } = useTheme();
 
     return (
-        <Canvas
-            ref={canvasRef}
-            style={{
-                width: '100vw',
-                height: '100vh',
-            }}
-            gl={{ preserveDrawingBuffer: true }}
-            camera={{ position: [0, 2, 4] }}
-        >
-            <ambientLight />
-            {models.map((model, index) => (
-                <Models key={index} model={model} />
-            ))}
-            <GizmoHelper alignment="bottom-right" margin={[60, 60]} renderPriority={1}>
-                <GizmoViewport
-                    axisColors={
-                        theme === 'dark' ? ['#fff', '#fff', '#fff'] : ['#000', '#000', '#000']
-                    }
-                    labelColor={theme === 'dark' ? 'black' : 'white'}
+        <div className="w-screen h-screen">
+            <Canvas
+                ref={canvasRef}
+                gl={{ preserveDrawingBuffer: true }}
+                camera={{ position: [5, 5, 5] }}
+            >
+                <Skybox type="HDRI" />
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[2, 2, 2]} intensity={1} />
+                <Grid
+                    position={[0, -0.01, 0]}
+                    args={[10.5, 10.5]}
+                    cellColor={theme == 'light' ? 'black' : 'white'}
+                    sectionColor={theme == 'light' ? 'black' : 'white'}
+                    fadeDistance={20}
+                    fadeStrength={1}
+                    infiniteGrid
                 />
-            </GizmoHelper>
-            <Grid
-                position={[0, 0.01, 0]}
-                args={[10, 10]}
-                cellSize={0.5}
-                cellThickness={0.5}
-                cellColor={theme === 'light' ? '#333' : '#ddd'}
-                sectionSize={5}
-                sectionThickness={1.5}
-                sectionColor={theme === 'light' ? '#333' : '#ddd'}
-                fadeDistance={25}
-                fadeStrength={2}
-                followCamera={false}
-                infiniteGrid={true}
-            />
-            <Skybox type="HDRI" />
-            <ambientLight />
-            <pointLight position={[10, 10, 10]} />
-            <OrbitControls
-                makeDefault
-                maxPolarAngle={Math.PI / 1.6}
-                minDistance={1}
-                maxDistance={30}
-                enablePan={true}
-            />
-        </Canvas>
+                <OrbitControls makeDefault />
+                <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
+                    <GizmoViewport
+                        axisColors={
+                            theme == 'light'
+                                ? ['black', 'black', 'black']
+                                : ['white', 'white', 'white']
+                        }
+                        labelColor={theme == 'light' ? 'white' : 'black'}
+                    />
+                </GizmoHelper>
+
+                {models.map((model, index) => (
+                    <Models key={index} model={model} volumeSettings={volumeSettings} />
+                ))}
+            </Canvas>
+        </div>
     );
 };
 
@@ -82,8 +72,8 @@ export default Viewer;
 function Box() {
     return (
         <mesh>
-            <boxGeometry />
-            <meshStandardMaterial />
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="orange" />
         </mesh>
     );
 }
@@ -101,20 +91,20 @@ function ObjModel({ url }: { url: string }) {
 }
 
 // Raw volume component
-function VolumeModel({ url }: { url: string }) {
+function VolumeModel({ url, volumeSettings }: { url: string; volumeSettings: VolumeSettings }) {
     const buffer = useLoader(FileLoader, url, (loader) =>
         (loader as FileLoader).setResponseType('arraybuffer'),
     ) as ArrayBuffer;
     const volumeData = useMemo(() => new Uint8Array(buffer), [buffer]);
-    return <VolumetricRenderer volumeData={volumeData} />;
+    return <VolumetricRenderer volumeData={volumeData} volumeSettings={volumeSettings} />;
 }
 
-function Models({ model }: { model: Model }) {
+function Models({ model, volumeSettings }: { model: Model; volumeSettings: VolumeSettings }) {
     return (
         <Suspense fallback={<Box />}>
             {model.type === 'splat' && (
                 <TransformControls mode="translate">
-                    <Splat alphaTest={0.1} position={[0, 0, 0]} src={model.url} />
+                    <Splat src={model.url} />
                 </TransformControls>
             )}
             {model.type === 'fbx' && (
@@ -129,7 +119,7 @@ function Models({ model }: { model: Model }) {
             )}
             {model.type === 'volume' && (
                 <TransformControls mode="translate">
-                    <VolumeModel url={model.url} />
+                    <VolumeModel url={model.url} volumeSettings={volumeSettings} />
                 </TransformControls>
             )}
         </Suspense>

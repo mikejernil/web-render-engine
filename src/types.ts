@@ -8,12 +8,30 @@ export interface Model {
     type: ModelType;
 }
 
+/** Clipping plane bounds in [-1, 1]. */
+export interface ClippingBoxFaces {
+    xMinusSideFace: number;
+    xPlusSideFace: number;
+    yMinusBottomFace: number;
+    yPlusTopFace: number;
+    zMinusBackFace: number;
+    zPlusFrontFace: number;
+}
+
+/** Volume clipping state. */
+export interface VolumeSettings {
+    faces: ClippingBoxFaces;
+    showClippingBox: boolean;
+}
+
 /** What every render effect gets to draw with. */
 export interface RenderFxProps {
     /** One byte per voxel, 256^3 total. */
     voxels: Uint8Array;
     /** Draw mesh effects as lines. */
     wireframe: boolean;
+    /** Clipping bounds for the volume. */
+    volumeSettings?: VolumeSettings;
 }
 
 /** One entry in the Render FX list. */
