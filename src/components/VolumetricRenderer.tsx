@@ -19,9 +19,16 @@ export interface VolumetricRendererProps {
 }
 
 /** The Render FX list. Add an entry here and it shows up in the UI. */
+const DEFAULT_ISO_VALUE = 100; // move such things to CONSTANTS
+
 const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
-    { name: 'Marching Tetrahedra', Effect: MarchingTetrahedraFx, hasWireframe: true },
+    {
+        name: 'Marching Tetrahedra',
+        Effect: MarchingTetrahedraFx,
+        hasWireframe: true,
+        hasIsoValue: true,
+    },
 ];
 
 /** Bold when on, dimmed when off. */
@@ -32,7 +39,9 @@ const buttonClass = (active: boolean) =>
 const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererProps) => {
     const { theme } = useTheme();
     const [activeFx, setActiveFx] = useState(0);
-    const { Effect, hasWireframe = false } = RENDER_FX[activeFx];
+    const [isoValue, setIsoValue] = useState(DEFAULT_ISO_VALUE);
+
+    const { Effect, hasWireframe = false, hasIsoValue = false } = RENDER_FX[activeFx];
     const [wireframe, setWireframe] = useWireframe(hasWireframe);
 
     const voxels = useMemo(() => {
@@ -59,7 +68,12 @@ const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererPr
     return (
         <>
             {voxels && (
-                <Effect voxels={voxels} wireframe={wireframe} volumeSettings={volumeSettings} />
+                <Effect
+                    voxels={voxels}
+                    wireframe={wireframe}
+                    isoValue={isoValue}
+                    volumeSettings={volumeSettings}
+                />
             )}
             {volumeSettings.showClippingBox && (
                 <lineSegments geometry={clippingGeometry} scale={0.5}>
@@ -68,7 +82,9 @@ const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererPr
             )}
             <Html position={[0, 0.75, 0]} center>
                 <div
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md whitespace-nowrap select-none ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md whitespace-nowrap select-none ${
+                        theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'
+                    }`}
                 >
                     <span>Render FX -</span>
                     {RENDER_FX.map(({ name }, index) => (
@@ -90,6 +106,23 @@ const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererPr
                             >
                                 Wireframe (W)
                             </button>
+                        </>
+                    )}
+                    {hasIsoValue && (
+                        <>
+                            <span className="opacity-30">|</span>
+                            <label className="flex items-center gap-1.5 px-2 text-sm">
+                                <span>ISO: {isoValue}</span>
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={254}
+                                    step={1}
+                                    value={isoValue}
+                                    onChange={(e) => setIsoValue(Number(e.target.value))}
+                                    className="w-24 cursor-pointer accent-current"
+                                />
+                            </label>
                         </>
                     )}
                 </div>
