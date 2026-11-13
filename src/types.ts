@@ -22,6 +22,9 @@ export interface ClippingBoxFaces {
 export interface VolumeSettings {
     faces: ClippingBoxFaces;
     showClippingBox: boolean;
+    activeFx?: number;
+    wireframe?: boolean;
+    isoValue?: number;
 }
 
 /** What every render effect gets to draw with. */
