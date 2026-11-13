@@ -1,9 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+import * as THREE from 'three';
 
 import { Html } from '@react-three/drei';
 
 import { useTheme } from '../context/ThemeContext';
-import { DataFormat, RenderFx } from '../types';
+import { DataFormat, RenderFx, VolumeSettings } from '../types';
+import { createWireframeEdgePositions } from '../utils/clippingBox';
 import { VOXEL_COUNT } from '../utils/constants';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
@@ -11,7 +14,7 @@ import { useWireframe } from './volume/useWireframe';
 
 export interface VolumetricRendererProps {
     volumeData: Uint8Array | Uint16Array | Uint32Array | Float32Array | null;
-    dimensions?: [number, number, number];
+    volumeSettings: VolumeSettings;
 }
 
 function getMaxValueForFormat(format: DataFormat): number {
@@ -52,7 +55,7 @@ const buttonClass = (active: boolean) =>
     `px-2 py-0 bg-transparent ${active ? 'font-bold' : 'opacity-60'}`;
 
 /** Draws a raw 256^3 volume with the picked Render FX. Supports uint8, uint16, uint32, float32 data types. */
-const VolumetricRenderer = ({ volumeData }: VolumetricRendererProps) => {
+const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererProps) => {
     const { theme } = useTheme();
     const [activeFx, setActiveFx] = useState(0);
     const { Effect, hasWireframe = false } = RENDER_FX[activeFx];
@@ -73,9 +76,27 @@ const VolumetricRenderer = ({ volumeData }: VolumetricRendererProps) => {
         return normalized;
     }, [volumeData]);
 
+    const clippingGeometry = useMemo(() => {
+        const positions = createWireframeEdgePositions(volumeSettings.faces);
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        return geometry;
+    }, [volumeSettings.faces]);
+
+    useEffect(() => {
+        return () => clippingGeometry.dispose();
+    }, [clippingGeometry]);
+
     return (
         <>
-            {voxels && <Effect voxels={voxels} wireframe={wireframe} />}
+            {voxels && (
+                <Effect voxels={voxels} wireframe={wireframe} volumeSettings={volumeSettings} />
+            )}
+            {volumeSettings.showClippingBox && (
+                <lineSegments geometry={clippingGeometry} scale={0.5}>
+                    <lineBasicMaterial color="#00e5ff" />
+                </lineSegments>
+            )}
             <Html position={[0, 0.75, 0]} center>
                 <div
                     className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md whitespace-nowrap select-none ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
