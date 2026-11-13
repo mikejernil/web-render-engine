@@ -11,7 +11,7 @@ import Viewer from './components/Viewer';
 import { INITIAL_VOLUME_SETTINGS } from './utils/clippingBox';
 
 import { useTheme } from './context/ThemeContext';
-import { Model, ModelType, VolumeSettings } from './types';
+import { DataFormat, Model, ModelType, VolumeSettings, isValidDataFormat } from './types';
 
 const getModelType = (path: string): ModelType | null => {
     const lower = path.toLowerCase();
@@ -29,6 +29,12 @@ function App() {
 
     const [models, setModels] = useState<Model[]>([]);
     const [volumeSettings, setVolumeSettings] = useState<VolumeSettings>(INITIAL_VOLUME_SETTINGS);
+    const [tempVolumeDimensions, setTempVolumeDimensions] = useState({
+        x: 256,
+        y: 256,
+        z: 256,
+    });
+    const [tempVolumeDataType, setTempVolumeDataType] = useState<DataFormat>('uint8');
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -37,25 +43,41 @@ function App() {
             const type = getModelType(file.name);
             if (!type) return alert('Unsupported file format');
 
-            setModels([...models, { url: fileUrl, name: file.name, type }]);
+            const newModel: Model = {
+                url: fileUrl,
+                name: file.name,
+                type,
+                ...(type === 'volume' && {
+                    volumeDimensions: tempVolumeDimensions,
+                    volumeDataFormat: tempVolumeDataType,
+                }),
+            };
+            setModels([...models, newModel]);
         }
     };
 
     const loadUrlModel = () => {
         if (url) {
-            // match on the path only, so query params and hashes don't hide the extension
             let pathname = url;
             try {
                 pathname = new URL(url, window.location.href).pathname;
             } catch (error) {
-                // not a parseable URL, use the raw string
                 console.error('Could not parse model URL, using it as-is:', url, error);
             }
 
             const type = getModelType(pathname);
             if (!type) return alert('Unsupported URL file format');
 
-            setModels([...models, { url, name: pathname.split('/').pop() ?? '', type }]);
+            const newModel: Model = {
+                url,
+                name: pathname.split('/').pop() ?? '',
+                type,
+                ...(type === 'volume' && {
+                    volumeDimensions: tempVolumeDimensions,
+                    volumeDataFormat: tempVolumeDataType,
+                }),
+            };
+            setModels([...models, newModel]);
         }
     };
 
@@ -135,6 +157,72 @@ function App() {
                                 accept=".splat,.fbx,.obj,.glb,.raw,.vol"
                                 onChange={handleFileUpload}
                             />
+                            <div className="">
+                                <div
+                                    className={`${theme == 'light' ? 'text-black' : 'text-white'} text-sm mb-2`}
+                                >
+                                    Volume Dimensions
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10 text-white' : 'bg-black/25 placeholder:text-black/50 border-black/10 text-black'}`}
+                                        type="number"
+                                        placeholder="X"
+                                        value={tempVolumeDimensions.x}
+                                        onChange={(e) =>
+                                            setTempVolumeDimensions({
+                                                ...tempVolumeDimensions,
+                                                x: parseInt(e.target.value) || 256,
+                                            })
+                                        }
+                                    />
+                                    <input
+                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10 text-white' : 'bg-black/25 placeholder:text-black/50 border-black/10 text-black'}`}
+                                        type="number"
+                                        placeholder="Y"
+                                        value={tempVolumeDimensions.y}
+                                        onChange={(e) =>
+                                            setTempVolumeDimensions({
+                                                ...tempVolumeDimensions,
+                                                y: parseInt(e.target.value) || 256,
+                                            })
+                                        }
+                                    />
+                                    <input
+                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10 text-white' : 'bg-black/25 placeholder:text-black/50 border-black/10 text-black'}`}
+                                        type="number"
+                                        placeholder="Z"
+                                        value={tempVolumeDimensions.z}
+                                        onChange={(e) =>
+                                            setTempVolumeDimensions({
+                                                ...tempVolumeDimensions,
+                                                z: parseInt(e.target.value) || 256,
+                                            })
+                                        }
+                                    />
+                                </div>
+                            </div>
+                            <div className="">
+                                <div
+                                    className={`${theme == 'light' ? 'text-black' : 'text-white'} text-sm mb-2`}
+                                >
+                                    Data Type
+                                </div>
+                                <select
+                                    className={`w-full px-3 py-2 rounded-md border-2 border-solid backdrop-blur-xl ${theme == 'dark' ? 'bg-white/25 border-white/10 text-white' : 'bg-black/25 border-black/10 text-black'}`}
+                                    value={tempVolumeDataType}
+                                    onChange={(e) => {
+                                        if (isValidDataFormat(e.target.value)) {
+                                            setTempVolumeDataType(e.target.value);
+                                        }
+                                    }}
+                                >
+                                    <option value="uint8">uint8</option>
+                                    <option value="uint16">uint16</option>
+                                    <option value="uint32">uint32</option>
+                                    <option value="float32">float32</option>
+                                </select>
+                            </div>
                         </div>
                     </>
                 )}

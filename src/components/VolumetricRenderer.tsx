@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { Html } from '@react-three/drei';
 
 import { useTheme } from '../context/ThemeContext';
-import { RenderFx, VolumeSettings } from '../types';
+import { DataFormat, RenderFx, VolumeSettings } from '../types';
 import { createWireframeEdgePositions } from '../utils/clippingBox';
 import { VOXEL_COUNT } from '../utils/constants';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
@@ -13,22 +13,48 @@ import RaycastingFx from './volume/RaycastingFx';
 import { useWireframe } from './volume/useWireframe';
 
 export interface VolumetricRendererProps {
-    /** One byte per voxel, 256^3 total. `null` while loading. */
-    volumeData: Uint8Array | null;
+    volumeData: Uint8Array | Uint16Array | Uint32Array | Float32Array | null;
     volumeSettings: VolumeSettings;
+}
+
+function getMaxValueForFormat(format: DataFormat): number {
+    switch (format) {
+        case 'uint8':
+            return 255;
+        case 'uint16':
+            return 65535;
+        case 'uint32':
+            return 4294967295;
+        case 'float32':
+            return 1.0;
+        default:
+            return 255;
+    }
+}
+
+function detectFormat(data: Uint8Array | Uint16Array | Uint32Array | Float32Array): DataFormat {
+    if (data instanceof Uint8Array) return 'uint8';
+    if (data instanceof Uint16Array) return 'uint16';
+    if (data instanceof Uint32Array) return 'uint32';
+    if (data instanceof Float32Array) return 'float32';
+    return 'uint8';
 }
 
 /** The Render FX list. Add an entry here and it shows up in the UI. */
 const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
-    { name: 'Marching Tetrahedra', Effect: MarchingTetrahedraFx, hasWireframe: true },
+    {
+        name: 'Marching Tetrahedra',
+        Effect: MarchingTetrahedraFx,
+        hasWireframe: true,
+    },
 ];
 
 /** Bold when on, dimmed when off. */
 const buttonClass = (active: boolean) =>
     `px-2 py-0 bg-transparent ${active ? 'font-bold' : 'opacity-60'}`;
 
-/** Draws a raw 256^3 volume with the picked Render FX. Use inside an R3F `<Canvas>`. */
+/** Draws a raw 256^3 volume with the picked Render FX. Supports uint8, uint16, uint32, float32 data types. */
 const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererProps) => {
     const { theme } = useTheme();
     const [activeFx, setActiveFx] = useState(0);
@@ -38,11 +64,16 @@ const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererPr
     const voxels = useMemo(() => {
         if (!volumeData) return null;
 
-        // fixed 256^3 buffer: extra bytes are cut off, missing bytes stay zero
-        const data = new Uint8Array(VOXEL_COUNT);
-        data.set(volumeData.subarray(0, VOXEL_COUNT));
+        const detectedFormat = detectFormat(volumeData);
+        const maxValue = getMaxValueForFormat(detectedFormat);
 
-        return data;
+        // Normalize all data types to [0, 1] range as Uint8Array for render effects
+        const normalized = new Uint8Array(VOXEL_COUNT);
+        for (let i = 0; i < volumeData.length && i < VOXEL_COUNT; i++) {
+            normalized[i] = Math.round((volumeData[i] / maxValue) * 255);
+        }
+
+        return normalized;
     }, [volumeData]);
 
     const clippingGeometry = useMemo(() => {

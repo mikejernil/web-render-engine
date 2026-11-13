@@ -91,11 +91,30 @@ function ObjModel({ url }: { url: string }) {
 }
 
 // Raw volume component
-function VolumeModel({ url, volumeSettings }: { url: string; volumeSettings: VolumeSettings }) {
-    const buffer = useLoader(FileLoader, url, (loader) =>
+function VolumeModel({ model, volumeSettings }: { model: Model; volumeSettings: VolumeSettings }) {
+    const buffer = useLoader(FileLoader, model.url, (loader) =>
         (loader as FileLoader).setResponseType('arraybuffer'),
     ) as ArrayBuffer;
-    const volumeData = useMemo(() => new Uint8Array(buffer), [buffer]);
+
+    const { volumeData } = useMemo(() => {
+        const dataFormat = model.volumeDataFormat ?? 'uint8';
+
+        let data: Uint8Array | Uint16Array | Uint32Array | Float32Array;
+        if (dataFormat === 'uint16') {
+            data = new Uint16Array(buffer);
+        } else if (dataFormat === 'uint32') {
+            data = new Uint32Array(buffer);
+        } else if (dataFormat === 'float32') {
+            data = new Float32Array(buffer);
+        } else {
+            data = new Uint8Array(buffer);
+        }
+
+        return {
+            volumeData: data,
+        };
+    }, [buffer, model.volumeDataFormat]);
+
     return <VolumetricRenderer volumeData={volumeData} volumeSettings={volumeSettings} />;
 }
 
@@ -119,7 +138,7 @@ function Models({ model, volumeSettings }: { model: Model; volumeSettings: Volum
             )}
             {model.type === 'volume' && (
                 <TransformControls mode="translate">
-                    <VolumeModel url={model.url} volumeSettings={volumeSettings} />
+                    <VolumeModel model={model} volumeSettings={volumeSettings} />
                 </TransformControls>
             )}
         </Suspense>
