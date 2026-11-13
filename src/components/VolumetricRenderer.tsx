@@ -7,6 +7,7 @@ import { RenderFx } from '../types';
 import { VOXEL_COUNT } from '../utils/constants';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
+import PseudoIsoSurfaceFx from './volume/PseudoIsoSurfaceFx';
 import { useWireframe } from './volume/useWireframe';
 
 export interface VolumetricRendererProps {
@@ -17,6 +18,7 @@ export interface VolumetricRendererProps {
 /** The Render FX list. Add an entry here and it shows up in the UI. */
 const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
+    { name: 'pseudoIsoSurface ', Effect: PseudoIsoSurfaceFx },
     { name: 'Marching Tetrahedra', Effect: MarchingTetrahedraFx, hasWireframe: true },
 ];
 
