@@ -1,9 +1,9 @@
 # 🧊 Web Render Engine
 #### Created w/ `React + TypeScript + Vite` using Libraries - `React Three Fiber + Three.js + drei`
 
-Created by Michael Jernil, 3D Graphics Engineer & Enthusiast (https://www.linkedin.com/in/michael-jernil/)
+Under Development by **3D ENGINERD.** (https://www.3denginerd.com)
 
-For Blog post (link) - https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
+Originally created for Blog post (link) - https://radiancefields.com/understanding-3d-gaussian-splatting-via-render-engines/
 
 ### Demo
 Hosted at https://webrenderengine.vercel.app/
@@ -24,16 +24,9 @@ Example Hosted Splat Url - https://huggingface.co/cakewalk/splat-data/resolve/ma
 - Deployed Vercel App
 
 ### Features we are looking to build 🚀
-- glTF loading (Local or URL)
-- Dynamic Skybox (Day/Night/Indoor UI selector) 
-- SPLAT loading (Local)
-- USD loading (Local)
-- Sample assets
-- Snapshot feature
-- Object selection & metadata panel (name, TRS etc.)
-- Scene editor
-- View dependent loading
-- Add Lights
+- Volumetric Data support (RAW)
+- Volumetric features
+- Additional volumetric formats (DICOM, NRRD, VDB) support 
 
 ### Render Engine - First Principles 🧊
 
