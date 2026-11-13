@@ -1,20 +1,21 @@
 import * as THREE from 'three';
 
-import { CELL_SIZE, CUBE_CORNERS, CUBE_TETRAHEDRA, DIMENSION, ISO_VALUE } from './constants';
+import { CELL_SIZE, CUBE_CORNERS, CUBE_TETRAHEDRA, DIMENSION } from './constants';
 
 /** Makes a buffer twice as big, keeping what is in it. */
-const grow = (buffer: Float32Array) => {
-    const bigger = new Float32Array(buffer.length * 2);
-    bigger.set(buffer);
-    return bigger;
+const growBuffer = (buffer: Float32Array) => {
+    const expandedBuffer = new Float32Array(buffer.length * 2);
+    expandedBuffer.set(buffer);
+    return expandedBuffer;
 };
 
 /**
  * Pulls the iso-surface out of a volume as a plain triangle list.
  * @param voxels One byte per voxel, 256^3 total, x running fastest.
+ * @param isoValue The isovalue to extract the surface at.
  * @returns Position and normal of every vertex, three floats each, in two arrays.
  */
-export const marchTetrahedra = (voxels: Uint8Array) => {
+export function marchTetrahedra(voxels: Uint8Array, isoValue: number = 100) {
     const values = new Uint8Array(CUBE_CORNERS.length);
     const corners = CUBE_CORNERS.map(() => new THREE.Vector3());
     const gradients = CUBE_CORNERS.map(() => new THREE.Vector3());
@@ -33,8 +34,9 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
 
     // adds the point where the surface crosses the edge between two corners
     const pushVertex = (a: number, b: number) => {
-        const t = (ISO_VALUE - values[a]) / (values[b] - values[a]);
+        const t = (isoValue - values[a]) / (values[b] - values[a]);
         // voxel centres sit half a voxel in, matching the ray marched cube
+
         position
             .lerpVectors(corners[a], corners[b], t)
             .addScalar(0.5)
@@ -43,8 +45,8 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
         normal.lerpVectors(gradients[a], gradients[b], t).normalize();
 
         if (used === positions.length) {
-            positions = grow(positions);
-            normals = grow(normals);
+            positions = growBuffer(positions);
+            normals = growBuffer(normals);
         }
         position.toArray(positions, used);
         normal.toArray(normals, used);
@@ -55,7 +57,7 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
         let insideCount = 0;
         CUBE_CORNERS.forEach(([dx, dy, dz], i) => {
             values[i] = sample(x + dx * CELL_SIZE, y + dy * CELL_SIZE, z + dz * CELL_SIZE);
-            if (values[i] <= ISO_VALUE) insideCount++;
+            if (values[i] <= isoValue) insideCount++;
         });
 
         // the surface can't pass through a cell that is fully on one side of it
@@ -74,8 +76,8 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
         });
 
         for (const tetrahedron of CUBE_TETRAHEDRA) {
-            const inside = tetrahedron.filter((corner) => values[corner] <= ISO_VALUE);
-            const outside = tetrahedron.filter((corner) => values[corner] > ISO_VALUE);
+            const inside = tetrahedron.filter((corner) => values[corner] <= isoValue);
+            const outside = tetrahedron.filter((corner) => values[corner] > isoValue);
 
             if (inside.length === 2) {
                 // two corners on each side cuts the tetrahedron in a quad
@@ -102,4 +104,4 @@ export const marchTetrahedra = (voxels: Uint8Array) => {
     }
 
     return { positions: positions.slice(0, used), normals: normals.slice(0, used) };
-};
+}

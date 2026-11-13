@@ -8,15 +8,15 @@ import { RenderFxProps } from '../../types';
 import { marchTetrahedra } from '../../utils/marchTetrahedra';
 
 /** Draws the volume's iso-surface as a marching tetrahedra mesh. */
-const MarchingTetrahedraFx = ({ voxels, wireframe }: RenderFxProps) => {
+const MarchingTetrahedraFx = ({ voxels, wireframe = false, isoValue = 100 }: RenderFxProps) => {
     const surface = useMemo(() => {
-        const { positions, normals } = marchTetrahedra(voxels);
+        const { positions, normals } = marchTetrahedra(voxels, isoValue);
         return new THREE.BufferGeometry()
             .setAttribute('position', new THREE.BufferAttribute(positions, 3))
             .setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-    }, [voxels]);
+    }, [voxels, isoValue]);
 
-    // Free the mesh from the GPU when the effect is switched off or the data changes.
+    // Cleanup geometry on unmount or update
     useEffect(() => () => surface.dispose(), [surface]);
 
     return (

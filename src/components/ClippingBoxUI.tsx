@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { ClippingBoxFaces, VolumeSettings } from '../types';
 import { INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
+import { DEFAULT_ISO_VALUE, RENDER_FX } from './VolumetricRenderer';
 
 export interface ClippingBoxUIProps {
     settings: VolumeSettings;
@@ -9,7 +10,7 @@ export interface ClippingBoxUIProps {
     theme: 'light' | 'dark';
 }
 
-const MIN_GAP = 0.05;
+const MIN_FACE_GAP = 0.05;
 
 const FACE_CONTROLS: Array<{
     key: keyof ClippingBoxFaces;
@@ -29,7 +30,20 @@ const FACE_CONTROLS: Array<{
 const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
     const [open, setOpen] = useState(true);
 
-    const handleSliderChange = (
+    //
+    const activeFx = settings.activeFx ?? 0;
+    const wireframe = settings.wireframe ?? false;
+    const isoValue = settings.isoValue ?? DEFAULT_ISO_VALUE;
+    const { hasWireframe = false, hasIsoValue = false } = RENDER_FX[activeFx] || RENDER_FX[0];
+
+    useEffect(() => {
+        if (!hasWireframe) {
+            setSettings((prev) => ({ ...prev, wireframe: false }));
+            return;
+        }
+    }, [hasWireframe, setSettings]);
+
+    const updateFace = (
         key: keyof ClippingBoxFaces,
         value: number,
         isMin: boolean,
@@ -38,8 +52,8 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
         setSettings((prev) => {
             const pairedValue = prev.faces[pairedKey];
             const clamped = isMin
-                ? Math.min(value, pairedValue - MIN_GAP)
-                : Math.max(value, pairedValue + MIN_GAP);
+                ? Math.min(value, pairedValue - MIN_FACE_GAP)
+                : Math.max(value, pairedValue + MIN_FACE_GAP);
 
             return {
                 ...prev,
@@ -67,7 +81,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
             }`}
         >
             <div className="flex items-center justify-between font-bold">
-                <span>Clipping Box</span>
+                <span>Volumetric Controls</span>
                 <button
                     type="button"
                     onClick={() => setOpen(!open)}
@@ -79,6 +93,67 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
 
             {open && (
                 <div className="mt-3 space-y-2">
+                    <div className="space-y-1">
+                        <span className="font-semibold">Render FX</span>
+                        <div className="flex gap-1">
+                            {RENDER_FX.map(({ name }, index) => (
+                                <button
+                                    key={name}
+                                    type="button"
+                                    onClick={() =>
+                                        setSettings((prev) => ({ ...prev, activeFx: index }))
+                                    }
+                                    className={`flex-1 px-2 py-1 rounded border border-current ${
+                                        activeFx === index ? 'font-bold' : 'opacity-50'
+                                    }`}
+                                >
+                                    {name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {hasWireframe && (
+                        <label className="flex items-center justify-between cursor-pointer">
+                            <span>Wireframe</span>
+                            <input
+                                type="checkbox"
+                                checked={wireframe}
+                                onChange={(e) =>
+                                    setSettings((prev) => ({
+                                        ...prev,
+                                        wireframe: e.target.checked,
+                                    }))
+                                }
+                            />
+                        </label>
+                    )}
+
+                    {hasIsoValue && (
+                        <div className="space-y-0.5">
+                            <div className="flex justify-between">
+                                <span>ISO</span>
+                                <span className="font-mono">{isoValue}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min={1}
+                                max={254}
+                                step={1}
+                                value={isoValue}
+                                onChange={(e) =>
+                                    setSettings((prev) => ({
+                                        ...prev,
+                                        isoValue: Number(e.target.value),
+                                    }))
+                                }
+                                className="w-full cursor-pointer accent-current"
+                            />
+                        </div>
+                    )}
+
+                    <hr className="border-current opacity-20" />
+
                     <label className="flex items-center justify-between cursor-pointer">
                         <span>Show Box</span>
                         <input
@@ -117,14 +192,9 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                 step={0.01}
                                 value={settings.faces[key]}
                                 onChange={(e) =>
-                                    handleSliderChange(
-                                        key,
-                                        parseFloat(e.target.value),
-                                        isMin,
-                                        pairedKey,
-                                    )
+                                    updateFace(key, parseFloat(e.target.value), isMin, pairedKey)
                                 }
-                                className="w-full cursor-pointer accent-cyan-500"
+                                className="w-full cursor-pointer accent-current"
                             />
                         </div>
                     ))}
