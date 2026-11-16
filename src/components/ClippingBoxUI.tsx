@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 
 import { SlidersOutlined } from '@ant-design/icons';
 
-import { ClippingBoxFaces, VolumeColorPreset, VolumeSettings, VolumeShapePreset } from '../types';
-import { CLIPPING_FACE_CONTROLS_METADATA, INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
+import { ClippingBoxFaces, VolumeSettings, VolumeShapePreset } from '../types';
+import { INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
 import { VOLUME_VARIATIONS } from '../utils/sampleModels';
 
-/** Props for ClippingBoxUI. */
 export interface ClippingBoxUIProps {
     settings: VolumeSettings;
     setSettings: React.Dispatch<React.SetStateAction<VolumeSettings>>;
@@ -23,35 +22,51 @@ const COLOR_PRESETS: ReadonlyArray<{ id: VolumeColorPreset; label: string }> = [
 ];
 
 /** UI panel for volume clipping and appearance controls. */
+const MIN_GAP = 0.05;
+
+const FACE_CONTROLS: Array<{
+    key: keyof ClippingBoxFaces;
+    label: string;
+    isMin: boolean;
+    pairedKey: keyof ClippingBoxFaces;
+}> = [
+    { key: 'xMinusSideFace', label: 'X- Left', isMin: true, pairedKey: 'xPlusSideFace' },
+    { key: 'xPlusSideFace', label: 'X+ Right', isMin: false, pairedKey: 'xMinusSideFace' },
+    { key: 'yMinusBottomFace', label: 'Y- Bottom', isMin: true, pairedKey: 'yPlusTopFace' },
+    { key: 'yPlusTopFace', label: 'Y+ Top', isMin: false, pairedKey: 'yMinusBottomFace' },
+    { key: 'zMinusBackFace', label: 'Z- Back', isMin: true, pairedKey: 'zPlusFrontFace' },
+    { key: 'zPlusFrontFace', label: 'Z+ Front', isMin: false, pairedKey: 'zMinusBackFace' },
+];
+
+/** UI panel for volume clipping box bounds. */
 const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
     const [isOpen, setIsOpen] = useState(true);
 
-    const updateClippingFaceBound = (
-        faceKey: keyof ClippingBoxFaces,
-        rawSliderValue: number,
-        boundType: 'minimum' | 'maximum',
-        pairedFaceKey: keyof ClippingBoxFaces,
+    const handleSliderChange = (
+        key: keyof ClippingBoxFaces,
+        value: number,
+        isMin: boolean,
+        pairedKey: keyof ClippingBoxFaces,
     ) => {
-        setSettings((previousSettings) => {
-            const pairedBoundValue = previousSettings.faces[pairedFaceKey];
-            const clampedValue =
-                boundType === 'minimum'
-                    ? Math.min(rawSliderValue, pairedBoundValue - MINIMUM_FACE_SEPARATION)
-                    : Math.max(rawSliderValue, pairedBoundValue + MINIMUM_FACE_SEPARATION);
+        setSettings((prev) => {
+            const pairedValue = prev.faces[pairedKey];
+            const clamped = isMin
+                ? Math.min(value, pairedValue - MIN_GAP)
+                : Math.max(value, pairedValue + MIN_GAP);
 
             return {
-                ...previousSettings,
+                ...prev,
                 faces: {
-                    ...previousSettings.faces,
-                    [faceKey]: Number(clampedValue.toFixed(3)),
+                    ...prev.faces,
+                    [key]: Number(clamped.toFixed(2)),
                 },
             };
         });
     };
 
-    const resetAllClippingFaces = () => {
-        setSettings((previousSettings) => ({
-            ...previousSettings,
+    const resetFaces = () => {
+        setSettings((prev) => ({
+            ...prev,
             faces: { ...INITIAL_CLIPPING_BOX_FACES },
         }));
     };
@@ -225,12 +240,14 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                 min={0.01}
                                 max={0.9}
                                 step={0.01}
-                                value={settings.densityThreshold}
-                                onChange={(event) =>
-                                    setSettings((previous) => ({
-                                        ...previous,
-                                        densityThreshold: parseFloat(event.target.value),
-                                    }))
+                                value={settings.faces[key]}
+                                onChange={(e) =>
+                                    handleSliderChange(
+                                        key,
+                                        parseFloat(e.target.value),
+                                        isMin,
+                                        pairedKey,
+                                    )
                                 }
                                 className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer ${sliderTrackClass}`}
                             />

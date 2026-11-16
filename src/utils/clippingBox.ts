@@ -1,25 +1,11 @@
-import {
-    ClampToEdgeWrapping,
-    Data3DTexture,
-    LinearFilter,
-    RedFormat,
-    UnsignedByteType,
-    Vector3,
-} from 'three';
+import { Vector3 } from 'three';
 
 import {
     ClippingBoxFaces,
-    ClippingFaceControlMetadata,
+   
     VolumeSettings,
     VolumeShapePreset,
 } from '../types';
-
-const SPHERE_MAX_RADIUS = 0.95;
-const TRIG_NOISE_FREQUENCY = 12.0;
-const CONCENTRIC_SHELL_FREQUENCY = 10.0;
-const CORE_INTENSITY_WEIGHT = 0.55;
-const CONCENTRIC_SHELL_WEIGHT = 0.35;
-const TRIG_NOISE_WEIGHT = 0.2;
 
 const CUBE_MAX_BOUND = 0.88;
 const CUBE_SHELL_THICKNESS = 0.14;
@@ -38,11 +24,10 @@ export const INITIAL_CLIPPING_BOX_FACES: ClippingBoxFaces = {
     zPlusFrontFace: 1.0,
 };
 
-/** Default volume settings. */
+/** Default volume clipping settings. */
 export const INITIAL_VOLUME_SETTINGS: VolumeSettings = {
     faces: { ...INITIAL_CLIPPING_BOX_FACES },
     shapePreset: 'sphere',
-    showVolume: true,
     showClippingBox: true,
     showOuterReferenceBox: true,
     densityThreshold: 0.15,
@@ -135,18 +120,18 @@ export function createWireframeEdgePositions(faces: ClippingBoxFaces): Float32Ar
     const vertexList = createVertexListFromFaces(faces);
     const edgePositions = new Float32Array(BOX_EDGE_INDICES.length * 6);
 
-    BOX_EDGE_INDICES.forEach(([startIndex, endIndex], edgeNumber) => {
-        const startVertex = vertexList[startIndex];
-        const endVertex = vertexList[endIndex];
-        const offset = edgeNumber * 6;
+    BOX_EDGE_INDICES.forEach(([startIndex, endIndex], edgeIndex) => {
+        const start = vertexList[startIndex];
+        const end = vertexList[endIndex];
+        const offset = edgeIndex * 6;
 
-        edgePositions[offset] = startVertex.x;
-        edgePositions[offset + 1] = startVertex.y;
-        edgePositions[offset + 2] = startVertex.z;
+        edgePositions[offset] = start.x;
+        edgePositions[offset + 1] = start.y;
+        edgePositions[offset + 2] = start.z;
 
-        edgePositions[offset + 3] = endVertex.x;
-        edgePositions[offset + 4] = endVertex.y;
-        edgePositions[offset + 5] = endVertex.z;
+        edgePositions[offset + 3] = end.x;
+        edgePositions[offset + 4] = end.y;
+        edgePositions[offset + 5] = end.z;
     });
 
     return edgePositions;

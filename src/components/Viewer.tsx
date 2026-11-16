@@ -18,7 +18,6 @@ import { Canvas, useLoader } from '@react-three/fiber';
 import { useTheme } from '../context/ThemeContext';
 import { Model, VolumeSettings } from '../types';
 import Skybox from './Skybox';
-import VolumetricObject from './VolumetricObject';
 import VolumetricRenderer from './VolumetricRenderer';
 
 interface ViewerProps {
@@ -69,7 +68,7 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings, show
                 <VolumetricObject settings={volumeSettings} showHelpers={showHelpers} />
 
                 {models.map((model, index) => (
-                    <Models key={index} model={model} showHelpers={showHelpers} />
+                    <Models key={index} model={model} showHelpers={showHelpers} volumeSettings={volumeSettings} />
                 ))}
             </Canvas>
         </div>
@@ -106,15 +105,15 @@ function GlbModel({ url }: { url: string }) {
 }
 
 // Raw volume component
-function VolumeModel({ url }: { url: string }) {
+function VolumeModel({ url, volumeSettings }: { url: string; volumeSettings: VolumeSettings }) {
     const buffer = useLoader(FileLoader, url, (loader) =>
         (loader as FileLoader).setResponseType('arraybuffer'),
     ) as ArrayBuffer;
     const volumeData = useMemo(() => new Uint8Array(buffer), [buffer]);
-    return <VolumetricRenderer volumeData={volumeData} />;
+    return <VolumetricRenderer volumeData={volumeData} volumeSettings={volumeSettings} />;
 }
 
-function Models({ model, showHelpers }: { model: Model; showHelpers: boolean }) {
+function Models({ model, showHelpers, volumeSettings }: { model: Model; showHelpers: boolean; volumeSettings: VolumeSettings }) {
     return (
         <Suspense fallback={<Box />}>
             <PivotControls
@@ -127,7 +126,7 @@ function Models({ model, showHelpers }: { model: Model; showHelpers: boolean }) 
                 {model.type === 'fbx' && <FbxModel url={model.url} />}
                 {model.type === 'obj' && <ObjModel url={model.url} />}
                 {model.type === 'glb' && <GlbModel url={model.url} />}
-                {model.type === 'volume' && <VolumeModel url={model.url} />}
+                {model.type === 'volume' && <VolumeModel url={model.url} volumeSettings={volumeSettings} />}
             </PivotControls>
         </Suspense>
     );
