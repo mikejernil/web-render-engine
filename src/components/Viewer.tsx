@@ -115,7 +115,13 @@ function VolumeModel({ model, volumeSettings }: { model: Model; volumeSettings: 
         };
     }, [buffer, model.volumeDataFormat]);
 
-    return <VolumetricRenderer volumeData={volumeData} volumeSettings={volumeSettings} />;
+    return (
+        <VolumetricRenderer
+            volumeData={volumeData}
+            volumeSettings={volumeSettings}
+            volumeDimensions={model.volumeDimensions}
+        />
+    );
 }
 
 function Models({ model, volumeSettings }: { model: Model; volumeSettings: VolumeSettings }) {

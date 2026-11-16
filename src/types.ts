@@ -21,24 +21,6 @@ export const isValidDataFormat = (value: unknown): value is DataFormat => {
     return value === 'uint8' || value === 'uint16' || value === 'uint32' || value === 'float32';
 };
 
-/** What every render effect gets to draw with. */
-export interface RenderFxProps {
-    /** One byte per voxel, 256^3 total. */
-    voxels: Uint8Array;
-    /** Draw mesh effects as lines. */
-    wireframe: boolean;
-}
-
-/** One entry in the Render FX list. */
-export interface RenderFx {
-    /** Label shown on the effect's button. */
-    name: string;
-    /** Component that draws the volume. */
-    Effect: ComponentType<RenderFxProps>;
-    /** Shows the Wireframe toggle while this effect is picked. */
-    hasWireframe?: boolean;
-}
-
 /** Clipping plane bounds in [-1, 1]. */
 export interface ClippingBoxFaces {
     xMinusSideFace: number;
@@ -57,20 +39,15 @@ export interface VolumeSettings {
 
 /** What every render effect gets to draw with. */
 export interface RenderFxProps {
-    /** One byte per voxel, 256^3 total. */
     voxels: Uint8Array;
-    /** Draw mesh effects as lines. */
     wireframe: boolean;
-    /** Clipping bounds for the volume. */
     volumeSettings?: VolumeSettings;
+    volumeDimensions?: VolumeDimensions;
 }
 
 /** One entry in the Render FX list. */
 export interface RenderFx {
-    /** Label shown on the effect's button. */
     name: string;
-    /** Component that draws the volume. */
     Effect: ComponentType<RenderFxProps>;
-    /** Shows the Wireframe toggle while this effect is picked. */
     hasWireframe?: boolean;
 }

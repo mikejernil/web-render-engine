@@ -7,7 +7,7 @@ import { Html } from '@react-three/drei';
 import { useTheme } from '../context/ThemeContext';
 import { DataFormat, RenderFx, VolumeSettings } from '../types';
 import { createWireframeEdgePositions } from '../utils/clippingBox';
-import { VOXEL_COUNT } from '../utils/constants';
+import { detectFormat, getMaxValueForFormat } from '../utils/volumeData';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
 import { useWireframe } from './volume/useWireframe';
@@ -15,29 +15,7 @@ import { useWireframe } from './volume/useWireframe';
 export interface VolumetricRendererProps {
     volumeData: Uint8Array | Uint16Array | Uint32Array | Float32Array | null;
     volumeSettings: VolumeSettings;
-}
-
-function getMaxValueForFormat(format: DataFormat): number {
-    switch (format) {
-        case 'uint8':
-            return 255;
-        case 'uint16':
-            return 65535;
-        case 'uint32':
-            return 4294967295;
-        case 'float32':
-            return 1.0;
-        default:
-            return 255;
-    }
-}
-
-function detectFormat(data: Uint8Array | Uint16Array | Uint32Array | Float32Array): DataFormat {
-    if (data instanceof Uint8Array) return 'uint8';
-    if (data instanceof Uint16Array) return 'uint16';
-    if (data instanceof Uint32Array) return 'uint32';
-    if (data instanceof Float32Array) return 'float32';
-    return 'uint8';
+    volumeDimensions?: { x: number; y: number; z: number };
 }
 
 /** The Render FX list. Add an entry here and it shows up in the UI. */
@@ -55,26 +33,41 @@ const buttonClass = (active: boolean) =>
     `px-2 py-0 bg-transparent ${active ? 'font-bold' : 'opacity-60'}`;
 
 /** Draws a raw 256^3 volume with the picked Render FX. Supports uint8, uint16, uint32, float32 data types. */
-const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererProps) => {
+const VolumetricRenderer = ({
+    volumeData,
+    volumeSettings,
+    volumeDimensions,
+}: VolumetricRendererProps) => {
     const { theme } = useTheme();
     const [activeFx, setActiveFx] = useState(0);
     const { Effect, hasWireframe = false } = RENDER_FX[activeFx];
     const [wireframe, setWireframe] = useWireframe(hasWireframe);
 
+    // Use provided dimensions or default to 256^3
+    const dims = volumeDimensions || { x: 256, y: 256, z: 256 };
+    const voxelCount = dims.x * dims.y * dims.z;
+
+    // Detect format once, memoized separately
+    const dataFormat = useMemo(() => {
+        if (!volumeData) return 'uint8' as DataFormat;
+        return detectFormat(volumeData);
+    }, [volumeData]);
+
+    const maxValue = useMemo(() => {
+        return getMaxValueForFormat(dataFormat);
+    }, [dataFormat]);
+
     const voxels = useMemo(() => {
         if (!volumeData) return null;
 
-        const detectedFormat = detectFormat(volumeData);
-        const maxValue = getMaxValueForFormat(detectedFormat);
-
         // Normalize all data types to [0, 1] range as Uint8Array for render effects
-        const normalized = new Uint8Array(VOXEL_COUNT);
-        for (let i = 0; i < volumeData.length && i < VOXEL_COUNT; i++) {
+        const normalized = new Uint8Array(voxelCount);
+        for (let i = 0; i < volumeData.length && i < voxelCount; i++) {
             normalized[i] = Math.round((volumeData[i] / maxValue) * 255);
         }
 
         return normalized;
-    }, [volumeData]);
+    }, [volumeData, voxelCount, maxValue]);
 
     const clippingGeometry = useMemo(() => {
         const positions = createWireframeEdgePositions(volumeSettings.faces);
@@ -90,7 +83,12 @@ const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererPr
     return (
         <>
             {voxels && (
-                <Effect voxels={voxels} wireframe={wireframe} volumeSettings={volumeSettings} />
+                <Effect
+                    voxels={voxels}
+                    wireframe={wireframe}
+                    volumeSettings={volumeSettings}
+                    volumeDimensions={dims}
+                />
             )}
             {volumeSettings.showClippingBox && (
                 <lineSegments geometry={clippingGeometry} scale={0.5}>
