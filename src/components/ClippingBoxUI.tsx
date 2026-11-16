@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-
 import { SlidersOutlined } from '@ant-design/icons';
 
-import { ClippingBoxFaces, VolumeSettings, VolumeShapePreset } from '../types';
-import { INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
+import {
+    ClippingBoxFaces,
+    VolumeColorPreset,
+    VolumeShapePreset,
+    VolumeSettings,
+} from '../types';
+import {
+    CLIPPING_FACE_CONTROLS_METADATA,
+    INITIAL_CLIPPING_BOX_FACES,
+} from '../utils/clippingBox';
 import { VOLUME_VARIATIONS } from '../utils/sampleModels';
 
 export interface ClippingBoxUIProps {
@@ -22,51 +29,39 @@ const COLOR_PRESETS: ReadonlyArray<{ id: VolumeColorPreset; label: string }> = [
 ];
 
 /** UI panel for volume clipping and appearance controls. */
-const MIN_GAP = 0.05;
-
-const FACE_CONTROLS: Array<{
-    key: keyof ClippingBoxFaces;
-    label: string;
-    isMin: boolean;
-    pairedKey: keyof ClippingBoxFaces;
-}> = [
-    { key: 'xMinusSideFace', label: 'X- Left', isMin: true, pairedKey: 'xPlusSideFace' },
-    { key: 'xPlusSideFace', label: 'X+ Right', isMin: false, pairedKey: 'xMinusSideFace' },
-    { key: 'yMinusBottomFace', label: 'Y- Bottom', isMin: true, pairedKey: 'yPlusTopFace' },
-    { key: 'yPlusTopFace', label: 'Y+ Top', isMin: false, pairedKey: 'yMinusBottomFace' },
-    { key: 'zMinusBackFace', label: 'Z- Back', isMin: true, pairedKey: 'zPlusFrontFace' },
-    { key: 'zPlusFrontFace', label: 'Z+ Front', isMin: false, pairedKey: 'zMinusBackFace' },
-];
-
-/** UI panel for volume clipping box bounds. */
-const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
+const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({
+    settings,
+    setSettings,
+    theme,
+}) => {
     const [isOpen, setIsOpen] = useState(true);
 
-    const handleSliderChange = (
-        key: keyof ClippingBoxFaces,
-        value: number,
-        isMin: boolean,
-        pairedKey: keyof ClippingBoxFaces,
+    const updateClippingFaceBound = (
+        faceKey: keyof ClippingBoxFaces,
+        rawSliderValue: number,
+        boundType: 'minimum' | 'maximum',
+        pairedFaceKey: keyof ClippingBoxFaces,
     ) => {
-        setSettings((prev) => {
-            const pairedValue = prev.faces[pairedKey];
-            const clamped = isMin
-                ? Math.min(value, pairedValue - MIN_GAP)
-                : Math.max(value, pairedValue + MIN_GAP);
+        setSettings((previousSettings) => {
+            const pairedBoundValue = previousSettings.faces[pairedFaceKey];
+            const clampedValue =
+                boundType === 'minimum'
+                    ? Math.min(rawSliderValue, pairedBoundValue - MINIMUM_FACE_SEPARATION)
+                    : Math.max(rawSliderValue, pairedBoundValue + MINIMUM_FACE_SEPARATION);
 
             return {
-                ...prev,
+                ...previousSettings,
                 faces: {
-                    ...prev.faces,
-                    [key]: Number(clamped.toFixed(2)),
+                    ...previousSettings.faces,
+                    [faceKey]: Number(clampedValue.toFixed(2)),
                 },
             };
         });
     };
 
-    const resetFaces = () => {
-        setSettings((prev) => ({
-            ...prev,
+    const resetAllClippingFaces = () => {
+        setSettings((previousSettings) => ({
+            ...previousSettings,
             faces: { ...INITIAL_CLIPPING_BOX_FACES },
         }));
     };
@@ -169,7 +164,9 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                 }))
                             }
                             className={`p-1.5 rounded-md cursor-pointer text-center transition-colors ${
-                                settings.showOuterReferenceBox ? activePillClass : glassButtonClass
+                                settings.showOuterReferenceBox
+                                    ? activePillClass
+                                    : glassButtonClass
                             }`}
                         >
                             Bounds
@@ -240,14 +237,12 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                 min={0.01}
                                 max={0.9}
                                 step={0.01}
-                                value={settings.faces[key]}
-                                onChange={(e) =>
-                                    handleSliderChange(
-                                        key,
-                                        parseFloat(e.target.value),
-                                        isMin,
-                                        pairedKey,
-                                    )
+                                value={settings.densityThreshold}
+                                onChange={(event) =>
+                                    setSettings((previous) => ({
+                                        ...previous,
+                                        densityThreshold: parseFloat(event.target.value),
+                                    }))
                                 }
                                 className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer ${sliderTrackClass}`}
                             />

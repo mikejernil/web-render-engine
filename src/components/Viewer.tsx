@@ -27,8 +27,14 @@ interface ViewerProps {
     showHelpers: boolean;
 }
 
-const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings, showHelpers }) => {
+const Viewer: React.FC<ViewerProps> = ({
+    models,
+    canvasRef,
+    volumeSettings,
+    showHelpers,
+}) => {
     const { theme } = useTheme();
+    const hasLoadedVolumeModel = models.some((model) => model.type === 'volume');
 
     return (
         <div className="w-screen h-screen">
@@ -65,10 +71,28 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings, show
                     </GizmoHelper>
                 )}
 
-                <VolumetricObject settings={volumeSettings} showHelpers={showHelpers} />
+                {!hasLoadedVolumeModel && (
+                    <PivotControls
+                        visible={showHelpers}
+                        enabled={showHelpers}
+                        scale={0.75}
+                        depthTest={false}
+                    >
+                        <VolumetricRenderer
+                            volumeData={null}
+                            volumeSettings={volumeSettings}
+                            showHelpers={showHelpers}
+                        />
+                    </PivotControls>
+                )}
 
                 {models.map((model, index) => (
-                    <Models key={index} model={model} showHelpers={showHelpers} volumeSettings={volumeSettings} />
+                    <Models
+                        key={index}
+                        model={model}
+                        volumeSettings={volumeSettings}
+                        showHelpers={showHelpers}
+                    />
                 ))}
             </Canvas>
         </div>
@@ -105,15 +129,37 @@ function GlbModel({ url }: { url: string }) {
 }
 
 // Raw volume component
-function VolumeModel({ url, volumeSettings }: { url: string; volumeSettings: VolumeSettings }) {
+function VolumeModel({
+    url,
+    volumeSettings,
+    showHelpers,
+}: {
+    url: string;
+    volumeSettings: VolumeSettings;
+    showHelpers: boolean;
+}) {
     const buffer = useLoader(FileLoader, url, (loader) =>
         (loader as FileLoader).setResponseType('arraybuffer'),
     ) as ArrayBuffer;
     const volumeData = useMemo(() => new Uint8Array(buffer), [buffer]);
-    return <VolumetricRenderer volumeData={volumeData} volumeSettings={volumeSettings} />;
+    return (
+        <VolumetricRenderer
+            volumeData={volumeData}
+            volumeSettings={volumeSettings}
+            showHelpers={showHelpers}
+        />
+    );
 }
 
-function Models({ model, showHelpers, volumeSettings }: { model: Model; showHelpers: boolean; volumeSettings: VolumeSettings }) {
+function Models({
+    model,
+    volumeSettings,
+    showHelpers,
+}: {
+    model: Model;
+    volumeSettings: VolumeSettings;
+    showHelpers: boolean;
+}) {
     return (
         <Suspense fallback={<Box />}>
             <PivotControls
@@ -122,11 +168,19 @@ function Models({ model, showHelpers, volumeSettings }: { model: Model; showHelp
                 scale={0.75}
                 depthTest={false}
             >
-                {model.type === 'splat' && <Splat src={model.url} />}
+                {model.type === 'splat' && (
+                    <Splat src={model.url} position={[0, 0, 0]} alphaTest={0.1} />
+                )}
                 {model.type === 'fbx' && <FbxModel url={model.url} />}
                 {model.type === 'obj' && <ObjModel url={model.url} />}
                 {model.type === 'glb' && <GlbModel url={model.url} />}
-                {model.type === 'volume' && <VolumeModel url={model.url} volumeSettings={volumeSettings} />}
+                {model.type === 'volume' && (
+                    <VolumeModel
+                        url={model.url}
+                        volumeSettings={volumeSettings}
+                        showHelpers={showHelpers}
+                    />
+                )}
             </PivotControls>
         </Suspense>
     );

@@ -1,21 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import * as THREE from 'three';
-
 import { Html } from '@react-three/drei';
 
 import { useTheme } from '../context/ThemeContext';
 import { RenderFx, VolumeSettings } from '../types';
-import { createWireframeEdgePositions } from '../utils/clippingBox';
+import {
+    INITIAL_CLIPPING_BOX_FACES,
+    createProceduralVolumeVoxels,
+    createWireframeEdgePositions,
+} from '../utils/clippingBox';
 import { VOXEL_COUNT } from '../utils/constants';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
 import { useWireframe } from './volume/useWireframe';
 
 export interface VolumetricRendererProps {
-    /** One byte per voxel, 256^3 total. `null` while loading. */
-    volumeData: Uint8Array | null;
+    /** One byte per voxel, 256^3 total. Uses procedural shape if omitted or null. */
+    volumeData?: Uint8Array | null;
     volumeSettings: VolumeSettings;
+    showHelpers?: boolean;
 }
 
 /** The Render FX list. Add an entry here and it shows up in the UI. */
@@ -28,22 +32,28 @@ const RENDER_FX: RenderFx[] = [
 const buttonClass = (active: boolean) =>
     `px-2 py-0 bg-transparent ${active ? 'font-bold' : 'opacity-60'}`;
 
-/** Draws a raw 256^3 volume with the picked Render FX. Use inside an R3F `<Canvas>`. */
-const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererProps) => {
+/** Draws a 256^3 volume with the picked Render FX. Use inside an R3F `<Canvas>`. */
+const VolumetricRenderer = ({
+    volumeData = null,
+    volumeSettings,
+    showHelpers = true,
+}: VolumetricRendererProps) => {
     const { theme } = useTheme();
     const [activeFx, setActiveFx] = useState(0);
     const { Effect, hasWireframe = false } = RENDER_FX[activeFx];
     const [wireframe, setWireframe] = useWireframe(hasWireframe);
 
     const voxels = useMemo(() => {
-        if (!volumeData) return null;
+        if (!volumeData) {
+            return createProceduralVolumeVoxels(volumeSettings.shapePreset);
+        }
 
         // fixed 256^3 buffer: extra bytes are cut off, missing bytes stay zero
         const data = new Uint8Array(VOXEL_COUNT);
         data.set(volumeData.subarray(0, VOXEL_COUNT));
 
         return data;
-    }, [volumeData]);
+    }, [volumeData, volumeSettings.shapePreset]);
 
     const clippingGeometry = useMemo(() => {
         const positions = createWireframeEdgePositions(volumeSettings.faces);
@@ -56,44 +66,70 @@ const VolumetricRenderer = ({ volumeData, volumeSettings }: VolumetricRendererPr
         return () => clippingGeometry.dispose();
     }, [clippingGeometry]);
 
+    const outerReferenceGeometry = useMemo(() => {
+        const positions = createWireframeEdgePositions(INITIAL_CLIPPING_BOX_FACES);
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        return geometry;
+    }, []);
+
+    useEffect(() => {
+        return () => outerReferenceGeometry.dispose();
+    }, [outerReferenceGeometry]);
+
     return (
         <>
-            {voxels && (
-                <Effect voxels={voxels} wireframe={wireframe} volumeSettings={volumeSettings} />
+            {voxels && volumeSettings.showVolume && (
+                <Effect
+                    voxels={voxels}
+                    wireframe={wireframe}
+                    volumeSettings={volumeSettings}
+                />
             )}
-            {volumeSettings.showClippingBox && (
+            {showHelpers && volumeSettings.showOuterReferenceBox && (
+                <lineSegments geometry={outerReferenceGeometry} scale={0.5}>
+                    <lineBasicMaterial color="#888888" transparent opacity={0.45} />
+                </lineSegments>
+            )}
+            {showHelpers && volumeSettings.showClippingBox && (
                 <lineSegments geometry={clippingGeometry} scale={0.5}>
                     <lineBasicMaterial color="#00e5ff" />
                 </lineSegments>
             )}
-            <Html position={[0, 0.75, 0]} center>
-                <div
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md whitespace-nowrap select-none ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
-                >
-                    <span>Render FX -</span>
-                    {RENDER_FX.map(({ name }, index) => (
-                        <button
-                            key={name}
-                            className={buttonClass(index === activeFx)}
-                            onClick={() => setActiveFx(index)}
-                        >
-                            {name}
-                        </button>
-                    ))}
-                    {hasWireframe && (
-                        <>
-                            <span className="opacity-30">|</span>
+            {showHelpers && volumeSettings.showVolume && (
+                <Html position={[0, 0.75, 0]} center>
+                    <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md whitespace-nowrap select-none ${
+                            theme === 'dark'
+                                ? 'bg-white/10 text-white'
+                                : 'bg-black/10 text-black'
+                        }`}
+                    >
+                        <span>Render FX -</span>
+                        {RENDER_FX.map(({ name }, index) => (
                             <button
-                                className={buttonClass(wireframe)}
-                                aria-pressed={wireframe}
-                                onClick={() => setWireframe(!wireframe)}
+                                key={name}
+                                className={buttonClass(index === activeFx)}
+                                onClick={() => setActiveFx(index)}
                             >
-                                Wireframe (W)
+                                {name}
                             </button>
-                        </>
-                    )}
-                </div>
-            </Html>
+                        ))}
+                        {hasWireframe && (
+                            <>
+                                <span className="opacity-30">|</span>
+                                <button
+                                    className={buttonClass(wireframe)}
+                                    aria-pressed={wireframe}
+                                    onClick={() => setWireframe(!wireframe)}
+                                >
+                                    Wireframe (W)
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </Html>
+            )}
         </>
     );
 };

@@ -8,11 +8,10 @@ import Socials from './components/Socials';
 import ThemeSwitch from './components/ThemeSwitch';
 import Viewer from './components/Viewer';
 
-import { INITIAL_VOLUME_SETTINGS } from './utils/clippingBox';
-import { SAMPLE_MODELS, VOLUME_VARIATIONS } from './utils/sampleModels';
-
 import { useTheme } from './context/ThemeContext';
 import { Model, ModelType, VolumeSettings } from './types';
+import { INITIAL_VOLUME_SETTINGS } from './utils/clippingBox';
+import { SAMPLE_MODELS, VOLUME_VARIATIONS } from './utils/sampleModels';
 
 type SampleFilterTab = 'all' | 'splat' | 'obj' | 'fbx' | 'glb' | 'volume';
 
@@ -247,7 +246,9 @@ function App() {
                                     }`}
                                 />
                                 <div
-                                    className={`${theme == 'light' ? 'text-black' : 'text-white'}`}
+                                    className={`${
+                                        theme == 'light' ? 'text-black' : 'text-white'
+                                    }`}
                                 >
                                     or
                                 </div>
@@ -274,7 +275,11 @@ function App() {
 
             <div className="fixed top-2 right-2 z-10 flex gap-2">
                 <ThemeSwitch />
-                <Screenshot canvasRef={canvasRef} theme={theme} setShowHelpers={setShowHelpers} />
+                <Screenshot
+                    canvasRef={canvasRef}
+                    theme={theme}
+                    setShowHelpers={setShowHelpers}
+                />
             </div>
 
             <ClippingBoxUI
