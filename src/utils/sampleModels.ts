@@ -3,6 +3,16 @@ import { DIMENSION, VOXEL_COUNT } from './constants';
 
 const generatedUrlCache: Record<string, string> = {};
 
+const svgThumb = (label: string, color: string) =>
+    `data:image/svg+xml;utf8,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140">
+            <rect width="200" height="140" fill="#1e1e24"/>
+            <circle cx="100" cy="62" r="34" fill="none" stroke="${color}" stroke-width="5" opacity="0.85"/>
+            <circle cx="100" cy="62" r="16" fill="${color}" opacity="0.5"/>
+            <text x="100" y="122" font-family="sans-serif" font-size="13" fill="#ffffff" text-anchor="middle">${label}</text>
+        </svg>`,
+    )}`;
+
 /** Generates a 256^3 nested sphere volume. */
 function createNestedSphereVolumeUrl(): string {
     if (generatedUrlCache.sphere) return generatedUrlCache.sphere;
@@ -67,62 +77,67 @@ function createHollowCubeVolumeUrl(): string {
 
 export const SAMPLE_MODELS: SampleModel[] = [
     {
-        id: 'splat-1',
+        id: 'splat-nike',
         name: 'Nike Shoe',
         type: 'splat',
-        url: 'https://huggingface.co/cakewalk/splat-data/resolve/main/nike.splat',
-        thumbnail: '/assets/splat-1.jpg',
+        url: '/models/nike.splat',
+        thumbnail: '/Sample/shoe.jpg',
     },
     {
-        id: 'splat-2',
-        name: 'Sample Splat 2',
+        id: 'splat-plush',
+        name: 'Plush',
         type: 'splat',
-        url: '/samples/sample2.splat',
-        thumbnail: '/assets/splat-2.jpg',
+        url: '/models/Plush.splat',
+        thumbnail: '/Sample/plush.jpg',
     },
     {
-        id: 'obj-1',
-        name: 'Sample OBJ 1',
+        id: 'obj-chair',
+        name: 'Chair',
         type: 'obj',
-        url: '/samples/sample1.obj',
-        thumbnail: '/assets/obj-1.jpg',
+        url: '/models/Chair.obj',
+        thumbnail: '/Sample/chair.jpg',
     },
     {
-        id: 'obj-2',
-        name: 'Sample OBJ 2',
+        id: 'obj-fox',
+        name: 'Fox',
         type: 'obj',
-        url: '/samples/sample2.obj',
-        thumbnail: '/assets/obj-2.jpg',
+        url: '/models/Fox.obj',
+        thumbnail: '/Sample/fox.jpg',
     },
     {
-        id: 'fbx-1',
-        name: 'Sample FBX 1',
+        id: 'fbx-imposter',
+        name: 'Imposter',
         type: 'fbx',
-        url: '/samples/sample1.fbx',
-        thumbnail: '/assets/fbx-1.jpg',
+        url: '/models/Imposter.fbx',
+        thumbnail: '/Sample/imposter.jpg',
     },
     {
-        id: 'fbx-2',
-        name: 'Sample FBX 2',
+        id: 'fbx-mazda',
+        name: 'Mazda',
         type: 'fbx',
-        url: '/samples/sample2.fbx',
-        thumbnail: '/assets/fbx-2.jpg',
+        url: '/models/Mazda.fbx',
+        thumbnail: '/Sample/Mazda.jpg',
     },
     {
-        id: 'vol-1',
-        name: 'Sample Volume 1',
-        type: 'volume',
-        url: '/samples/sample1.raw',
-        thumbnail: '/assets/volume-1.jpg',
-        volumeDimensions: { x: 256, y: 256, z: 256 },
-        volumeDataFormat: 'uint8',
+        id: 'glb-duck',
+        name: 'Duck',
+        type: 'glb',
+        url: '/models/duck_model.glb',
+        thumbnail: '/Sample/Duck.jpg',
     },
     {
-        id: 'vol-2',
-        name: 'Sample Volume 2',
+        id: 'glb-pikachu',
+        name: 'Pikachu',
+        type: 'glb',
+        url: '/models/Pikachu.glb',
+        thumbnail: '/Sample/pikachu.jpg',
+    },
+    {
+        id: 'vol-engine',
+        name: 'Engine 256',
         type: 'volume',
-        url: '/samples/sample2.raw',
-        thumbnail: '/assets/volume-2.jpg',
+        url: '/assets/Engine256.raw',
+        thumbnail: svgThumb('Engine 256', '#38bdf8'),
         volumeDimensions: { x: 256, y: 256, z: 256 },
         volumeDataFormat: 'uint8',
     },
@@ -131,16 +146,16 @@ export const SAMPLE_MODELS: SampleModel[] = [
         name: 'Nested Sphere',
         type: 'volume',
         createUrl: createNestedSphereVolumeUrl,
-        thumbnail: '/assets/volume-sphere.jpg',
+        thumbnail: svgThumb('Nested Sphere', '#f472b6'),
         volumeDimensions: { x: 256, y: 256, z: 256 },
         volumeDataFormat: 'uint8',
     },
     {
         id: 'vol-cube',
-        name: 'Hollow Cube Core',
+        name: 'Hollow Cube',
         type: 'volume',
         createUrl: createHollowCubeVolumeUrl,
-        thumbnail: '/assets/volume-cube.jpg',
+        thumbnail: svgThumb('Hollow Cube', '#34d399'),
         volumeDimensions: { x: 256, y: 256, z: 256 },
         volumeDataFormat: 'uint8',
     },

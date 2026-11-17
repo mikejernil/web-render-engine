@@ -13,7 +13,8 @@ const FILTER_TABS: Array<{ label: string; value: 'all' | ModelType }> = [
     { label: 'Splat', value: 'splat' },
     { label: 'OBJ', value: 'obj' },
     { label: 'FBX', value: 'fbx' },
-    { label: 'Volume', value: 'volume' },
+    { label: 'GLB', value: 'glb' },
+    { label: 'Vol', value: 'volume' },
 ];
 
 /** Visual grid for picking sample models. */
@@ -39,7 +40,7 @@ const SampleSelector: React.FC<SampleSelectorProps> = ({ theme, onSelectSample }
                         <div
                             key={tab.value}
                             onClick={() => setActiveFilter(tab.value)}
-                            className={`flex-1 py-1 text-center text-xs rounded-md cursor-pointer select-none backdrop-blur-md ${
+                            className={`flex-1 py-1 text-center text-[11px] rounded-md cursor-pointer select-none backdrop-blur-md transition ${
                                 isActive
                                     ? theme === 'dark'
                                         ? 'bg-white/30 text-white font-semibold'
@@ -55,27 +56,24 @@ const SampleSelector: React.FC<SampleSelectorProps> = ({ theme, onSelectSample }
                 })}
             </div>
 
-            <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
+            <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
                 {visibleSamples.map((sample) => (
                     <div
                         key={sample.id}
                         onClick={() => onSelectSample(sample)}
-                        className={`group relative rounded-md border overflow-hidden cursor-pointer select-none backdrop-blur-md transition ${cardStyle}`}
+                        className={`group relative rounded-lg border overflow-hidden cursor-pointer select-none backdrop-blur-md transition ${cardStyle}`}
                     >
                         <div className="relative h-20 w-full bg-black/20 flex items-center justify-center overflow-hidden">
                             <img
                                 src={sample.thumbnail}
                                 alt={sample.name}
                                 className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                                onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                }}
                             />
-                            <span className="absolute top-1 right-1 px-1.5 py-0.5 text-[10px] uppercase font-bold rounded bg-black/60 text-white">
+                            <span className="absolute top-1 right-1 px-1.5 py-0.5 text-[9px] uppercase font-bold rounded bg-black/65 text-white">
                                 {sample.type}
                             </span>
                         </div>
-                        <div className="px-2 py-1 text-xs truncate">{sample.name}</div>
+                        <div className="px-2 py-1 text-xs font-medium truncate">{sample.name}</div>
                     </div>
                 ))}
             </div>

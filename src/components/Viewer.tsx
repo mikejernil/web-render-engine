@@ -9,8 +9,9 @@ import {
     GizmoViewport,
     Grid,
     OrbitControls,
+    PivotControls,
     Splat,
-    TransformControls,
+    useGLTF,
 } from '@react-three/drei';
 import { Canvas, useLoader } from '@react-three/fiber';
 
@@ -59,12 +60,8 @@ const Viewer: React.FC<ViewerProps> = ({
                 <OrbitControls makeDefault />
                 <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
                     <GizmoViewport
-                        axisColors={
-                            theme === 'light'
-                                ? ['black', 'black', 'black']
-                                : ['white', 'white', 'white']
-                        }
-                        labelColor={theme === 'light' ? 'white' : 'black'}
+                        axisColors={['#f43f5e', '#10b981', '#0ea5e9']}
+                        labelColor="white"
                     />
                 </GizmoHelper>
 
@@ -101,6 +98,11 @@ function FbxModel({ url }: { url: string }) {
 function ObjModel({ url }: { url: string }) {
     const obj = useLoader(OBJLoader, url);
     return <primitive object={obj} />;
+}
+
+function GlbModel({ url }: { url: string }) {
+    const { scene } = useGLTF(url);
+    return <primitive object={scene} />;
 }
 
 function VolumeModel({
@@ -154,12 +156,16 @@ function Models({
 }) {
     return (
         <Suspense fallback={<Box />}>
-            <TransformControls
-                mode="translate"
-                enabled={isSelected}
-                showX={isSelected}
-                showY={isSelected}
-                showZ={isSelected}
+            <PivotControls
+                scale={0.65}
+                lineWidth={2.5}
+                axisColors={['#f43f5e', '#10b981', '#0ea5e9']}
+                hoveredColor="#ffffff"
+                depthTest={false}
+                disableAxes={!isSelected}
+                disableSliders
+                disableRotations={!isSelected}
+                disableScaling
             >
                 <group
                     onClick={(e) => {
@@ -170,6 +176,7 @@ function Models({
                     {model.type === 'splat' && <Splat src={model.url} />}
                     {model.type === 'fbx' && <FbxModel url={model.url} />}
                     {model.type === 'obj' && <ObjModel url={model.url} />}
+                    {model.type === 'glb' && <GlbModel url={model.url} />}
                     {model.type === 'volume' && (
                         <VolumeModel
                             model={model}
@@ -178,7 +185,7 @@ function Models({
                         />
                     )}
                 </group>
-            </TransformControls>
+            </PivotControls>
         </Suspense>
     );
 }

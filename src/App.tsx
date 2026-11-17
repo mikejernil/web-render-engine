@@ -23,6 +23,7 @@ const getModelType = (path: string): ModelType | null => {
     if (lower.endsWith('.splat')) return 'splat';
     if (lower.endsWith('.fbx')) return 'fbx';
     if (lower.endsWith('.obj')) return 'obj';
+    if (lower.endsWith('.glb') || lower.endsWith('.gltf')) return 'glb';
     if (lower.endsWith('.raw') || lower.endsWith('.vol')) return 'volume';
     return null;
 };
@@ -191,7 +192,7 @@ function App() {
                                     : 'file:bg-black/25 file:text-black/50 text-black/75 file:border-black/10'
                             }`}
                             type="file"
-                            accept=".splat,.fbx,.obj,.glb,.raw,.vol"
+                            accept=".splat,.fbx,.obj,.glb,.gltf,.raw,.vol"
                             onChange={handleFileUpload}
                         />
                     </div>
