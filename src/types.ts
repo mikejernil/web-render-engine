@@ -17,6 +17,17 @@ export interface Model {
     volumeDataFormat?: DataFormat;
 }
 
+export interface SampleModel {
+    id: string;
+    name: string;
+    type: ModelType;
+    thumbnail: string;
+    url?: string;
+    createUrl?: () => string;
+    volumeDimensions?: VolumeDimensions;
+    volumeDataFormat?: DataFormat;
+}
+
 export const isValidDataFormat = (value: unknown): value is DataFormat => {
     return value === 'uint8' || value === 'uint16' || value === 'uint32' || value === 'float32';
 };

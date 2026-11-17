@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 
+import {
+    BorderOuterOutlined,
+    EyeInvisibleOutlined,
+    EyeOutlined,
+    ReloadOutlined,
+} from '@ant-design/icons';
+
 import { ClippingBoxFaces, VolumeSettings } from '../types';
 import { INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
 
@@ -27,7 +34,14 @@ const FACE_CONTROLS: Array<{
 
 /** UI panel for volume clipping box bounds. */
 const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
+
+    const surfaceStyle =
+        theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black';
+    const buttonStyle =
+        theme === 'dark'
+            ? 'bg-white/15 hover:bg-white/25 text-white'
+            : 'bg-black/15 hover:bg-black/25 text-black';
 
     const handleSliderChange = (
         key: keyof ClippingBoxFaces,
@@ -58,76 +72,72 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
         }));
     };
 
+    const toggleBoxVisibility = () => {
+        setSettings((prev) => ({
+            ...prev,
+            showClippingBox: !prev.showClippingBox,
+        }));
+    };
+
     return (
-        <div
-            className={`fixed top-14 right-2 z-10 w-64 rounded-xl border p-3 backdrop-blur-md text-xs ${
-                theme === 'light'
-                    ? 'bg-white/80 text-black border-black/10'
-                    : 'bg-black/80 text-white border-white/10'
-            }`}
-        >
-            <div className="flex items-center justify-between font-bold">
-                <span>Clipping Box</span>
-                <button
-                    type="button"
-                    onClick={() => setOpen(!open)}
-                    className="px-2 py-0.5 rounded border border-current"
-                >
-                    {open ? 'Hide' : 'Show'}
-                </button>
+        <div className="fixed top-14 right-2 z-10 flex flex-col items-end gap-2">
+            <div
+                className={`p-2 gap-2 flex items-center justify-center rounded-md backdrop-blur-md cursor-pointer select-none ${surfaceStyle}`}
+                onClick={() => setOpen(!open)}
+            >
+                <BorderOuterOutlined />
+                <span>{open ? 'Close Clipping' : 'Clipping Box'}</span>
             </div>
 
             {open && (
-                <div className="mt-3 space-y-2">
-                    <label className="flex items-center justify-between cursor-pointer">
-                        <span>Show Box</span>
-                        <input
-                            type="checkbox"
-                            checked={settings.showClippingBox}
-                            onChange={(e) =>
-                                setSettings((prev) => ({
-                                    ...prev,
-                                    showClippingBox: e.target.checked,
-                                }))
-                            }
-                        />
-                    </label>
-
-                    <div className="flex items-center justify-between pt-1">
-                        <span className="font-semibold">Bounds</span>
-                        <button
-                            type="button"
-                            onClick={resetFaces}
-                            className="px-2 py-0.5 rounded border border-current text-[11px]"
+                <div
+                    className={`w-64 p-3 rounded-md backdrop-blur-md text-xs space-y-3 select-none ${surfaceStyle}`}
+                >
+                    <div className="flex gap-2">
+                        <div
+                            onClick={toggleBoxVisibility}
+                            className={`flex-1 p-2 gap-1.5 flex items-center justify-center rounded-md cursor-pointer transition ${buttonStyle}`}
                         >
-                            Reset
-                        </button>
+                            {settings.showClippingBox ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                            <span>{settings.showClippingBox ? 'Box Visible' : 'Box Hidden'}</span>
+                        </div>
+                        <div
+                            onClick={resetFaces}
+                            className={`p-2 gap-1.5 flex items-center justify-center rounded-md cursor-pointer transition ${buttonStyle}`}
+                        >
+                            <ReloadOutlined />
+                            <span>Reset</span>
+                        </div>
                     </div>
 
-                    {FACE_CONTROLS.map(({ key, label, isMin, pairedKey }) => (
-                        <div key={key} className="space-y-0.5">
-                            <div className="flex justify-between">
-                                <span>{label}</span>
-                                <span className="font-mono">{settings.faces[key].toFixed(2)}</span>
+                    <div className="space-y-2">
+                        {FACE_CONTROLS.map(({ key, label, isMin, pairedKey }) => (
+                            <div key={key} className="space-y-0.5">
+                                <div className="flex justify-between">
+                                    <span>{label}</span>
+                                    <span className="font-mono">
+                                        {settings.faces[key].toFixed(2)}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min={-1}
+                                    max={1}
+                                    step={0.01}
+                                    value={settings.faces[key]}
+                                    onChange={(e) =>
+                                        handleSliderChange(
+                                            key,
+                                            parseFloat(e.target.value),
+                                            isMin,
+                                            pairedKey,
+                                        )
+                                    }
+                                    className="w-full cursor-pointer accent-cyan-400"
+                                />
                             </div>
-                            <input
-                                type="range"
-                                min={-1}
-                                max={1}
-                                step={0.01}
-                                value={settings.faces[key]}
-                                onChange={(e) =>
-                                    handleSliderChange(
-                                        key,
-                                        parseFloat(e.target.value),
-                                        isMin,
-                                        pairedKey,
-                                    )
-                                }
-                                className="w-full cursor-pointer accent-cyan-500"
-                            />
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
