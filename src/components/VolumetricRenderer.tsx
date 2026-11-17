@@ -22,6 +22,7 @@ export interface VolumetricRendererProps {
 /** The Render FX list. Add an entry here and it shows up in the UI. */
 const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
+    { name: 'pseudoIsoSurface', Effect: PseudoIsoSurfaceFx },
     {
         name: 'Marching Tetrahedra',
         Effect: MarchingTetrahedraFx,
