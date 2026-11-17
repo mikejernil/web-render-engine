@@ -7,29 +7,33 @@ import { useFrame } from '@react-three/fiber';
 import fragmentShader from '../../shaders/volume/fragment.glsl';
 import vertexShader from '../../shaders/volume/vertex.glsl';
 import { RenderFxProps } from '../../types';
-import { DIMENSION } from '../../utils/constants';
 
 /** Ray marches the volume inside a unit cube. */
-const RaycastingFx = ({ voxels }: RenderFxProps) => {
+const RaycastingFx = ({ voxels, volumeSettings, volumeDimensions }: RenderFxProps) => {
     const meshRef = useRef<THREE.Mesh>(null);
 
+    const dims = volumeDimensions || { x: 256, y: 256, z: 256 };
+
     const texture = useMemo(() => {
-        const result = new THREE.Data3DTexture(voxels, DIMENSION, DIMENSION, DIMENSION);
+        const result = new THREE.Data3DTexture(voxels, dims.x, dims.y, dims.z);
         result.format = THREE.RedFormat;
         result.minFilter = THREE.LinearFilter;
         result.magFilter = THREE.LinearFilter;
         result.needsUpdate = true;
-
         return result;
-    }, [voxels]);
+    }, [voxels, dims.x, dims.y, dims.z]);
 
     const uniforms = useMemo(
         () => ({
             uVolumeTexture: { value: null as THREE.Data3DTexture | null },
             u_cameraPosition: { value: new THREE.Vector3() },
-            u_stepSize: { value: new THREE.Vector3().setScalar(1 / DIMENSION) },
+            u_stepSize: {
+                value: new THREE.Vector3(1 / dims.x, 1 / dims.y, 1 / dims.z),
+            },
+            u_clipMin: { value: new THREE.Vector3(0, 0, 0) },
+            u_clipMax: { value: new THREE.Vector3(1, 1, 1) },
         }),
-        [],
+        [dims.x, dims.y, dims.z],
     );
 
     // Bind the texture to the shader, and free its GPU memory when it changes or on unmount.
@@ -41,6 +45,20 @@ const RaycastingFx = ({ voxels }: RenderFxProps) => {
     // Every frame, put the camera in the cube's local space so the shader can get ray directions.
     useFrame(({ camera }) => {
         meshRef.current?.worldToLocal(camera.getWorldPosition(uniforms.u_cameraPosition.value));
+
+        if (volumeSettings) {
+            const { faces } = volumeSettings;
+            uniforms.u_clipMin.value.set(
+                (faces.xMinusSideFace + 1) * 0.5,
+                (faces.yMinusBottomFace + 1) * 0.5,
+                (faces.zMinusBackFace + 1) * 0.5,
+            );
+            uniforms.u_clipMax.value.set(
+                (faces.xPlusSideFace + 1) * 0.5,
+                (faces.yPlusTopFace + 1) * 0.5,
+                (faces.zPlusFrontFace + 1) * 0.5,
+            );
+        }
     });
 
     return (
