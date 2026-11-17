@@ -20,6 +20,7 @@ export interface ClippingBoxUIProps {
 const MIN_GAP = 0.05;
 const TYPING_FIELDS = 'input, textarea, select, [contenteditable]';
 
+// Six clipping plane slider configs
 const FACE_CONTROLS: Array<{
     key: keyof ClippingBoxFaces;
     label: string;
@@ -34,6 +35,7 @@ const FACE_CONTROLS: Array<{
     { key: 'zPlusFrontFace', label: 'Z+ Front', isMin: false, pairedKey: 'zMinusBackFace' },
 ];
 
+// Volume transfer color presets
 const COLOR_PRESETS: Array<{ label: string; value: ColorMapPreset }> = [
     { label: 'Anatomical', value: 'anatomical' },
     { label: 'Viridis', value: 'viridis' },
@@ -46,6 +48,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
     const [open, setOpen] = useState(true);
     const hasWireframe = Boolean(RENDER_FX[settings.activeFx]?.hasWireframe);
 
+    // Toggle wireframe with W key when supported
     useEffect(() => {
         if (!hasWireframe) return;
 
@@ -64,7 +67,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
     const panelBg =
         theme === 'dark'
             ? 'bg-neutral-900/75 text-white border-white/10'
-            : 'bg-white/75 text-black border-black/10';
+            : 'bg-black/15 text-black border-black/10';
     const cardBg = theme === 'dark' ? 'bg-white/10' : 'bg-black/10';
     const btnBg =
         theme === 'dark'
@@ -75,6 +78,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
             ? 'bg-white/30 text-white font-bold'
             : 'bg-black/25 text-black font-bold';
 
+    // Clamp opposing faces so min never crosses max
     const handleSliderChange = (
         key: keyof ClippingBoxFaces,
         value: number,
@@ -100,7 +104,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
     return (
         <div className="fixed top-14 right-2 z-10 flex flex-col items-end gap-2">
             <div
-                className={`p-2 gap-2 flex items-center justify-center rounded-md border backdrop-blur-md cursor-pointer select-none ${panelBg}`}
+                className={`p-2.5 gap-2 flex items-center justify-center rounded-lg border backdrop-blur-md cursor-pointer select-none ${panelBg}`}
                 onClick={() => setOpen(!open)}
             >
                 <ControlOutlined />
@@ -111,6 +115,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                 <div
                     className={`w-72 max-h-[82vh] p-3.5 rounded-xl border backdrop-blur-xl text-xs space-y-3 select-none overflow-y-auto ${panelBg}`}
                 >
+                    {/* Render FX and fixed wireframe button */}
                     <div className="space-y-1.5">
                         <span className="font-semibold text-sm">Render Mode</span>
                         <div className="grid grid-cols-2 gap-1.5">
@@ -172,6 +177,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
 
                     <div className="h-[1px] bg-current opacity-15" />
 
+                    {/* Clipping plane sliders */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span className="font-semibold text-sm">Clip Faces</span>
@@ -218,6 +224,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
 
                     <div className="h-[1px] bg-current opacity-15" />
 
+                    {/* Density, opacity, and transfer color presets */}
                     <div className="space-y-2">
                         <div className={`px-3 py-2 rounded-lg space-y-1.5 ${cardBg}`}>
                             <div className="flex justify-between items-center">
@@ -285,6 +292,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
 
                     <div className="h-[1px] bg-current opacity-15" />
 
+                    {/* Volume dimensions and format */}
                     <div className="space-y-2">
                         <div className="font-semibold text-sm">Volume Format</div>
                         <div className="grid grid-cols-3 gap-1.5">

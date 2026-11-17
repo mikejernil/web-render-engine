@@ -1,24 +1,16 @@
 import { SampleModel } from '../types';
 import { DIMENSION, VOXEL_COUNT } from './constants';
 
+// Cache generated blob URLs to avoid recomputing volumes
 const generatedUrlCache: Record<string, string> = {};
 
-const svgThumb = (label: string, color: string) =>
-    `data:image/svg+xml;utf8,${encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140">
-            <rect width="200" height="140" fill="#1e1e24"/>
-            <circle cx="100" cy="62" r="34" fill="none" stroke="${color}" stroke-width="5" opacity="0.85"/>
-            <circle cx="100" cy="62" r="16" fill="${color}" opacity="0.5"/>
-            <text x="100" y="122" font-family="sans-serif" font-size="13" fill="#ffffff" text-anchor="middle">${label}</text>
-        </svg>`,
-    )}`;
-
-/** Generates a 256^3 nested sphere volume. */
-function createNestedSphereVolumeUrl(): string {
-    if (generatedUrlCache.sphere) return generatedUrlCache.sphere;
+/** Generates a 256^3 sphere with internal wave noise. */
+function createNoiseSphereVolumeUrl(): string {
+    if (generatedUrlCache.noiseSphere) return generatedUrlCache.noiseSphere;
 
     const voxels = new Uint8Array(VOXEL_COUNT);
     const center = DIMENSION / 2;
+    const radius = 96;
 
     for (let z = 0; z < DIMENSION; z++) {
         const dz = z - center;
@@ -28,54 +20,84 @@ function createNestedSphereVolumeUrl(): string {
                 const dx = x - center;
                 const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-                let density = 0;
-                if (dist < 45) {
-                    density = 220;
-                } else if (dist > 65 && dist < 95) {
-                    density = 120;
+                if (dist < radius) {
+                    const wave =
+                        Math.sin(x * 0.12) * Math.cos(y * 0.12) +
+                        Math.sin(z * 0.12);
+                    const falloff = 1 - dist / radius;
+                    voxels[x + y * DIMENSION + z * DIMENSION * DIMENSION] =
+                        Math.max(0, Math.min(255, Math.round((falloff * 160) + wave * 45)));
                 }
-
-                voxels[x + y * DIMENSION + z * DIMENSION * DIMENSION] = density;
             }
         }
     }
 
     const blobUrl = URL.createObjectURL(new Blob([voxels]));
-    generatedUrlCache.sphere = blobUrl;
+    generatedUrlCache.noiseSphere = blobUrl;
     return blobUrl;
 }
 
-/** Generates a 256^3 hollow cube frame with a solid core. */
-function createHollowCubeVolumeUrl(): string {
-    if (generatedUrlCache.cube) return generatedUrlCache.cube;
+/** Generates a 256^3 procedural gyroid cube volume. */
+function createGyroidCubeVolumeUrl(): string {
+    if (generatedUrlCache.gyroidCube) return generatedUrlCache.gyroidCube;
 
     const voxels = new Uint8Array(VOXEL_COUNT);
-    const center = DIMENSION / 2;
+    const margin = 36;
+    const scale = 0.085;
 
-    for (let z = 0; z < DIMENSION; z++) {
-        const az = Math.abs(z - center);
-        for (let y = 0; y < DIMENSION; y++) {
-            const ay = Math.abs(y - center);
-            for (let x = 0; x < DIMENSION; x++) {
-                const ax = Math.abs(x - center);
-                const maxAxis = Math.max(ax, ay, az);
-                const minAxis = Math.min(ax, ay, az);
+    for (let z = margin; z < DIMENSION - margin; z++) {
+        const sz = Math.sin(z * scale);
+        const cz = Math.cos(z * scale);
+        for (let y = margin; y < DIMENSION - margin; y++) {
+            const sy = Math.sin(y * scale);
+            const cy = Math.cos(y * scale);
+            for (let x = margin; x < DIMENSION - margin; x++) {
+                const sx = Math.sin(x * scale);
+                const cx = Math.cos(x * scale);
 
-                const isOuterFrame = maxAxis < 95 && maxAxis > 75 && minAxis > 55;
-                const isInnerCore = maxAxis < 35;
-
-                voxels[x + y * DIMENSION + z * DIMENSION * DIMENSION] =
-                    isInnerCore ? 230 : isOuterFrame ? 150 : 0;
+                // Standard gyroid implicit surface equation
+                const gyroid = sx * cy + sy * cz + sz * cx;
+                if (Math.abs(gyroid) < 0.45) {
+                    voxels[x + y * DIMENSION + z * DIMENSION * DIMENSION] = 200;
+                }
             }
         }
     }
 
     const blobUrl = URL.createObjectURL(new Blob([voxels]));
-    generatedUrlCache.cube = blobUrl;
+    generatedUrlCache.gyroidCube = blobUrl;
     return blobUrl;
 }
 
+// Built-in sample models mapped to public folder assets
 export const SAMPLE_MODELS: SampleModel[] = [
+    {
+        id: 'vol-sphere',
+        name: 'Noise Sphere',
+        type: 'volume',
+        createUrl: createNoiseSphereVolumeUrl,
+        thumbnail: '',
+        volumeDimensions: { x: 256, y: 256, z: 256 },
+        volumeDataFormat: 'uint8',
+    },
+    {
+        id: 'vol-gyroid',
+        name: 'Gyroid Cube',
+        type: 'volume',
+        createUrl: createGyroidCubeVolumeUrl,
+        thumbnail: '',
+        volumeDimensions: { x: 256, y: 256, z: 256 },
+        volumeDataFormat: 'uint8',
+    },
+    {
+        id: 'vol-engine',
+        name: 'Engine 256',
+        type: 'volume',
+        url: '/assets/Engine256.raw',
+        thumbnail: '',
+        volumeDimensions: { x: 256, y: 256, z: 256 },
+        volumeDataFormat: 'uint8',
+    },
     {
         id: 'splat-nike',
         name: 'Nike Shoe',
@@ -131,32 +153,5 @@ export const SAMPLE_MODELS: SampleModel[] = [
         type: 'glb',
         url: '/models/Pikachu.glb',
         thumbnail: '/Sample/pikachu.jpg',
-    },
-    {
-        id: 'vol-engine',
-        name: 'Engine 256',
-        type: 'volume',
-        url: '/assets/Engine256.raw',
-        thumbnail: svgThumb('Engine 256', '#38bdf8'),
-        volumeDimensions: { x: 256, y: 256, z: 256 },
-        volumeDataFormat: 'uint8',
-    },
-    {
-        id: 'vol-sphere',
-        name: 'Nested Sphere',
-        type: 'volume',
-        createUrl: createNestedSphereVolumeUrl,
-        thumbnail: svgThumb('Nested Sphere', '#f472b6'),
-        volumeDimensions: { x: 256, y: 256, z: 256 },
-        volumeDataFormat: 'uint8',
-    },
-    {
-        id: 'vol-cube',
-        name: 'Hollow Cube',
-        type: 'volume',
-        createUrl: createHollowCubeVolumeUrl,
-        thumbnail: svgThumb('Hollow Cube', '#34d399'),
-        volumeDimensions: { x: 256, y: 256, z: 256 },
-        volumeDataFormat: 'uint8',
     },
 ];
