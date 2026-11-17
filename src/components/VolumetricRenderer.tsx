@@ -1,51 +1,101 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+import * as THREE from 'three';
 
 import { Html } from '@react-three/drei';
 
 import { useTheme } from '../context/ThemeContext';
-import { RenderFx } from '../types';
-import { VOXEL_COUNT } from '../utils/constants';
+import { DataFormat, RenderFx, VolumeSettings } from '../types';
+import { createWireframeEdgePositions } from '../utils/clippingBox';
+import { detectFormat, getMaxValueForFormat } from '../utils/volumeData';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
 import PseudoIsoSurfaceFx from './volume/PseudoIsoSurfaceFx';
 import { useWireframe } from './volume/useWireframe';
 
 export interface VolumetricRendererProps {
-    /** One byte per voxel, 256^3 total. `null` while loading. */
-    volumeData: Uint8Array | null;
+    volumeData: Uint8Array | Uint16Array | Uint32Array | Float32Array | null;
+    volumeSettings: VolumeSettings;
+    volumeDimensions?: { x: number; y: number; z: number };
 }
 
 /** The Render FX list. Add an entry here and it shows up in the UI. */
 const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
-    { name: 'pseudoIsoSurface ', Effect: PseudoIsoSurfaceFx },
-    { name: 'Marching Tetrahedra', Effect: MarchingTetrahedraFx, hasWireframe: true },
+    {
+        name: 'Marching Tetrahedra',
+        Effect: MarchingTetrahedraFx,
+        hasWireframe: true,
+    },
 ];
 
 /** Bold when on, dimmed when off. */
 const buttonClass = (active: boolean) =>
     `px-2 py-0 bg-transparent ${active ? 'font-bold' : 'opacity-60'}`;
 
-/** Draws a raw 256^3 volume with the picked Render FX. Use inside an R3F `<Canvas>`. */
-const VolumetricRenderer = ({ volumeData }: VolumetricRendererProps) => {
+/** Draws a raw 256^3 volume with the picked Render FX. Supports uint8, uint16, uint32, float32 data types. */
+const VolumetricRenderer = ({
+    volumeData,
+    volumeSettings,
+    volumeDimensions,
+}: VolumetricRendererProps) => {
     const { theme } = useTheme();
     const [activeFx, setActiveFx] = useState(0);
     const { Effect, hasWireframe = false } = RENDER_FX[activeFx];
     const [wireframe, setWireframe] = useWireframe(hasWireframe);
 
+    // Use provided dimensions or default to 256^3
+    const dims = volumeDimensions || { x: 256, y: 256, z: 256 };
+    const voxelCount = dims.x * dims.y * dims.z;
+
+    // Detect format once, memoized separately
+    const dataFormat = useMemo(() => {
+        if (!volumeData) return 'uint8' as DataFormat;
+        return detectFormat(volumeData);
+    }, [volumeData]);
+
+    const maxValue = useMemo(() => {
+        return getMaxValueForFormat(dataFormat);
+    }, [dataFormat]);
+
     const voxels = useMemo(() => {
         if (!volumeData) return null;
 
-        // fixed 256^3 buffer: extra bytes are cut off, missing bytes stay zero
-        const data = new Uint8Array(VOXEL_COUNT);
-        data.set(volumeData.subarray(0, VOXEL_COUNT));
+        // Normalize all data types to [0, 1] range as Uint8Array for render effects
+        const normalized = new Uint8Array(voxelCount);
+        for (let i = 0; i < volumeData.length && i < voxelCount; i++) {
+            normalized[i] = Math.round((volumeData[i] / maxValue) * 255);
+        }
 
-        return data;
-    }, [volumeData]);
+        return normalized;
+    }, [volumeData, voxelCount, maxValue]);
+
+    const clippingGeometry = useMemo(() => {
+        const positions = createWireframeEdgePositions(volumeSettings.faces);
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        return geometry;
+    }, [volumeSettings.faces]);
+
+    useEffect(() => {
+        return () => clippingGeometry.dispose();
+    }, [clippingGeometry]);
 
     return (
         <>
-            {voxels && <Effect voxels={voxels} wireframe={wireframe} />}
+            {voxels && (
+                <Effect
+                    voxels={voxels}
+                    wireframe={wireframe}
+                    volumeSettings={volumeSettings}
+                    volumeDimensions={dims}
+                />
+            )}
+            {volumeSettings.showClippingBox && (
+                <lineSegments geometry={clippingGeometry} scale={0.5}>
+                    <lineBasicMaterial color="#00e5ff" />
+                </lineSegments>
+            )}
             <Html position={[0, 0.75, 0]} center>
                 <div
                     className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md whitespace-nowrap select-none ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
