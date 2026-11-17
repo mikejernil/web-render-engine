@@ -23,9 +23,17 @@ interface ViewerProps {
     models: Model[];
     canvasRef: React.RefObject<HTMLCanvasElement>;
     volumeSettings: VolumeSettings;
+    selectedModelIndex: number | null;
+    onSelectModel: (index: number | null) => void;
 }
 
-const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) => {
+const Viewer: React.FC<ViewerProps> = ({
+    models,
+    canvasRef,
+    volumeSettings,
+    selectedModelIndex,
+    onSelectModel,
+}) => {
     const { theme } = useTheme();
 
     return (
@@ -34,6 +42,7 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) =>
                 ref={canvasRef}
                 gl={{ preserveDrawingBuffer: true }}
                 camera={{ position: [5, 5, 5] }}
+                onPointerMissed={() => onSelectModel(null)}
             >
                 <Skybox type="HDRI" />
                 <ambientLight intensity={0.5} />
@@ -41,8 +50,8 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) =>
                 <Grid
                     position={[0, -0.01, 0]}
                     args={[10.5, 10.5]}
-                    cellColor={theme == 'light' ? 'black' : 'white'}
-                    sectionColor={theme == 'light' ? 'black' : 'white'}
+                    cellColor={theme === 'light' ? 'black' : 'white'}
+                    sectionColor={theme === 'light' ? 'black' : 'white'}
                     fadeDistance={20}
                     fadeStrength={1}
                     infiniteGrid
@@ -51,16 +60,22 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) =>
                 <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
                     <GizmoViewport
                         axisColors={
-                            theme == 'light'
+                            theme === 'light'
                                 ? ['black', 'black', 'black']
                                 : ['white', 'white', 'white']
                         }
-                        labelColor={theme == 'light' ? 'white' : 'black'}
+                        labelColor={theme === 'light' ? 'white' : 'black'}
                     />
                 </GizmoHelper>
 
                 {models.map((model, index) => (
-                    <Models key={index} model={model} volumeSettings={volumeSettings} />
+                    <Models
+                        key={index}
+                        model={model}
+                        volumeSettings={volumeSettings}
+                        isSelected={selectedModelIndex === index}
+                        onSelect={() => onSelectModel(index)}
+                    />
                 ))}
             </Canvas>
         </div>
@@ -78,75 +93,92 @@ function Box() {
     );
 }
 
-// FBX Model component
 function FbxModel({ url }: { url: string }) {
     const fbx = useLoader(FBXLoader, url);
     return <primitive object={fbx} />;
 }
 
-// OBJ Model component
 function ObjModel({ url }: { url: string }) {
     const obj = useLoader(OBJLoader, url);
     return <primitive object={obj} />;
 }
 
-// Raw volume component
-function VolumeModel({ model, volumeSettings }: { model: Model; volumeSettings: VolumeSettings }) {
+function VolumeModel({
+    model,
+    volumeSettings,
+    isSelected,
+}: {
+    model: Model;
+    volumeSettings: VolumeSettings;
+    isSelected: boolean;
+}) {
     const buffer = useLoader(FileLoader, model.url, (loader) =>
         (loader as FileLoader).setResponseType('arraybuffer'),
     ) as ArrayBuffer;
 
-    const { volumeData } = useMemo(() => {
-        const dataFormat = model.volumeDataFormat ?? 'uint8';
+    const volumeData = useMemo(() => {
+        const dataFormat = isSelected
+            ? volumeSettings.dataFormat
+            : (model.volumeDataFormat ?? volumeSettings.dataFormat);
 
-        let data: Uint8Array | Uint16Array | Uint32Array | Float32Array;
-        if (dataFormat === 'uint16') {
-            data = new Uint16Array(buffer);
-        } else if (dataFormat === 'uint32') {
-            data = new Uint32Array(buffer);
-        } else if (dataFormat === 'float32') {
-            data = new Float32Array(buffer);
-        } else {
-            data = new Uint8Array(buffer);
-        }
+        if (dataFormat === 'uint16') return new Uint16Array(buffer);
+        if (dataFormat === 'uint32') return new Uint32Array(buffer);
+        if (dataFormat === 'float32') return new Float32Array(buffer);
+        return new Uint8Array(buffer);
+    }, [buffer, isSelected, model.volumeDataFormat, volumeSettings.dataFormat]);
 
-        return {
-            volumeData: data,
-        };
-    }, [buffer, model.volumeDataFormat]);
+    const dimensions = isSelected
+        ? volumeSettings.dimensions
+        : (model.volumeDimensions ?? volumeSettings.dimensions);
 
     return (
         <VolumetricRenderer
             volumeData={volumeData}
             volumeSettings={volumeSettings}
-            volumeDimensions={model.volumeDimensions}
+            volumeDimensions={dimensions}
+            isSelected={isSelected}
         />
     );
 }
 
-function Models({ model, volumeSettings }: { model: Model; volumeSettings: VolumeSettings }) {
+function Models({
+    model,
+    volumeSettings,
+    isSelected,
+    onSelect,
+}: {
+    model: Model;
+    volumeSettings: VolumeSettings;
+    isSelected: boolean;
+    onSelect: () => void;
+}) {
     return (
         <Suspense fallback={<Box />}>
-            {model.type === 'splat' && (
-                <TransformControls mode="translate">
-                    <Splat src={model.url} />
-                </TransformControls>
-            )}
-            {model.type === 'fbx' && (
-                <TransformControls mode="translate">
-                    <FbxModel url={model.url} />
-                </TransformControls>
-            )}
-            {model.type === 'obj' && (
-                <TransformControls mode="translate">
-                    <ObjModel url={model.url} />
-                </TransformControls>
-            )}
-            {model.type === 'volume' && (
-                <TransformControls mode="translate">
-                    <VolumeModel model={model} volumeSettings={volumeSettings} />
-                </TransformControls>
-            )}
+            <TransformControls
+                mode="translate"
+                enabled={isSelected}
+                showX={isSelected}
+                showY={isSelected}
+                showZ={isSelected}
+            >
+                <group
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onSelect();
+                    }}
+                >
+                    {model.type === 'splat' && <Splat src={model.url} />}
+                    {model.type === 'fbx' && <FbxModel url={model.url} />}
+                    {model.type === 'obj' && <ObjModel url={model.url} />}
+                    {model.type === 'volume' && (
+                        <VolumeModel
+                            model={model}
+                            volumeSettings={volumeSettings}
+                            isSelected={isSelected}
+                        />
+                    )}
+                </group>
+            </TransformControls>
         </Suspense>
     );
 }

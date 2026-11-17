@@ -3,7 +3,6 @@ import { useRef, useState } from 'react';
 import {
     AppstoreOutlined,
     CloudUploadOutlined,
-    DeleteOutlined,
     PlusCircleOutlined,
 } from '@ant-design/icons';
 
@@ -17,14 +16,7 @@ import Viewer from './components/Viewer';
 import { INITIAL_VOLUME_SETTINGS } from './utils/clippingBox';
 
 import { useTheme } from './context/ThemeContext';
-import {
-    DataFormat,
-    Model,
-    ModelType,
-    SampleModel,
-    VolumeSettings,
-    isValidDataFormat,
-} from './types';
+import { Model, ModelType, SampleModel, VolumeSettings } from './types';
 
 const getModelType = (path: string): ModelType | null => {
     const lower = path.toLowerCase();
@@ -41,13 +33,15 @@ function App() {
     const [url, setUrl] = useState('');
 
     const [models, setModels] = useState<Model[]>([]);
+    const [selectedModelIndex, setSelectedModelIndex] = useState<number | null>(null);
     const [volumeSettings, setVolumeSettings] = useState<VolumeSettings>(INITIAL_VOLUME_SETTINGS);
-    const [tempVolumeDimensions, setTempVolumeDimensions] = useState({
-        x: 256,
-        y: 256,
-        z: 256,
-    });
-    const [tempVolumeDataType, setTempVolumeDataType] = useState<DataFormat>('uint8');
+
+    const addModel = (newModel: Model) => {
+        setModels((prev) => {
+            setSelectedModelIndex(prev.length);
+            return [...prev, newModel];
+        });
+    };
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -56,16 +50,15 @@ function App() {
         const type = getModelType(file.name);
         if (!type) return alert('Unsupported file format');
 
-        const newModel: Model = {
+        addModel({
             url: URL.createObjectURL(file),
             name: file.name,
             type,
             ...(type === 'volume' && {
-                volumeDimensions: tempVolumeDimensions,
-                volumeDataFormat: tempVolumeDataType,
+                volumeDimensions: volumeSettings.dimensions,
+                volumeDataFormat: volumeSettings.dataFormat,
             }),
-        };
-        setModels((prev) => [...prev, newModel]);
+        });
     };
 
     const handleLoadUrl = () => {
@@ -81,40 +74,45 @@ function App() {
         const type = getModelType(pathname);
         if (!type) return alert('Unsupported URL file format');
 
-        const newModel: Model = {
+        addModel({
             url,
             name: pathname.split('/').pop() ?? 'Model',
             type,
             ...(type === 'volume' && {
-                volumeDimensions: tempVolumeDimensions,
-                volumeDataFormat: tempVolumeDataType,
+                volumeDimensions: volumeSettings.dimensions,
+                volumeDataFormat: volumeSettings.dataFormat,
             }),
-        };
-        setModels((prev) => [...prev, newModel]);
+        });
     };
 
     const handleSelectSample = (sample: SampleModel) => {
         const modelUrl = sample.createUrl ? sample.createUrl() : sample.url;
         if (!modelUrl) return;
 
-        const newModel: Model = {
+        if (sample.type === 'volume') {
+            setVolumeSettings((prev) => ({
+                ...prev,
+                dimensions: sample.volumeDimensions ?? prev.dimensions,
+                dataFormat: sample.volumeDataFormat ?? prev.dataFormat,
+            }));
+        }
+
+        addModel({
             url: modelUrl,
             name: sample.name,
             type: sample.type,
             ...(sample.type === 'volume' && {
-                volumeDimensions: sample.volumeDimensions ?? tempVolumeDimensions,
-                volumeDataFormat: sample.volumeDataFormat ?? tempVolumeDataType,
+                volumeDimensions: sample.volumeDimensions ?? volumeSettings.dimensions,
+                volumeDataFormat: sample.volumeDataFormat ?? volumeSettings.dataFormat,
             }),
-        };
-        setModels((prev) => [...prev, newModel]);
-    };
-
-    const removeModel = (indexToRemove: number) => {
-        setModels((prev) => prev.filter((_, index) => index !== indexToRemove));
+        });
     };
 
     const { theme } = useTheme();
     const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    const selectedModel = selectedModelIndex !== null ? models[selectedModelIndex] : null;
+    const isVolumeFocused = selectedModel?.type === 'volume';
 
     const surfaceStyle =
         theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black';
@@ -125,7 +123,7 @@ function App() {
 
     return (
         <>
-            <div className="flex flex-col gap-2 fixed top-2 left-2 z-10 max-h-[95vh] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-2 fixed top-2 left-2 z-10">
                 <div
                     className={`text-3xl font-bold select-none ${
                         theme === 'dark' ? 'text-white' : 'text-black'
@@ -196,81 +194,6 @@ function App() {
                             accept=".splat,.fbx,.obj,.glb,.raw,.vol"
                             onChange={handleFileUpload}
                         />
-
-                        <div>
-                            <div
-                                className={`${
-                                    theme === 'light' ? 'text-black' : 'text-white'
-                                } text-sm mb-1`}
-                            >
-                                Volume Dimensions
-                            </div>
-                            <div className="flex gap-2">
-                                {(['x', 'y', 'z'] as const).map((axis) => (
-                                    <input
-                                        key={axis}
-                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${inputStyle}`}
-                                        type="number"
-                                        placeholder={axis.toUpperCase()}
-                                        value={tempVolumeDimensions[axis]}
-                                        onChange={(e) =>
-                                            setTempVolumeDimensions({
-                                                ...tempVolumeDimensions,
-                                                [axis]: parseInt(e.target.value) || 256,
-                                            })
-                                        }
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div
-                                className={`${
-                                    theme === 'light' ? 'text-black' : 'text-white'
-                                } text-sm mb-1`}
-                            >
-                                Data Type
-                            </div>
-                            <select
-                                className={`w-full px-3 py-2 rounded-md border-2 border-solid backdrop-blur-xl ${inputStyle}`}
-                                value={tempVolumeDataType}
-                                onChange={(e) => {
-                                    if (isValidDataFormat(e.target.value)) {
-                                        setTempVolumeDataType(e.target.value);
-                                    }
-                                }}
-                            >
-                                <option value="uint8">uint8</option>
-                                <option value="uint16">uint16</option>
-                                <option value="uint32">uint32</option>
-                                <option value="float32">float32</option>
-                            </select>
-                        </div>
-
-                        {models.length > 0 && (
-                            <div className="pt-1 space-y-1">
-                                <div
-                                    className={`${
-                                        theme === 'light' ? 'text-black' : 'text-white'
-                                    } text-sm`}
-                                >
-                                    Scene Models ({models.length})
-                                </div>
-                                {models.map((model, index) => (
-                                    <div
-                                        key={`${model.name}-${index}`}
-                                        className={`px-2.5 py-1.5 flex items-center justify-between rounded-md backdrop-blur-md text-xs ${surfaceStyle}`}
-                                    >
-                                        <span className="truncate pr-2">{model.name}</span>
-                                        <DeleteOutlined
-                                            className="cursor-pointer opacity-70 hover:opacity-100"
-                                            onClick={() => removeModel(index)}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
@@ -280,13 +203,21 @@ function App() {
                 <Screenshot canvasRef={canvasRef} theme={theme} />
             </div>
 
-            <ClippingBoxUI
-                settings={volumeSettings}
-                setSettings={setVolumeSettings}
-                theme={theme}
-            />
+            {isVolumeFocused && (
+                <ClippingBoxUI
+                    settings={volumeSettings}
+                    setSettings={setVolumeSettings}
+                    theme={theme}
+                />
+            )}
 
-            <Viewer models={models} canvasRef={canvasRef} volumeSettings={volumeSettings} />
+            <Viewer
+                models={models}
+                canvasRef={canvasRef}
+                volumeSettings={volumeSettings}
+                selectedModelIndex={selectedModelIndex}
+                onSelectModel={setSelectedModelIndex}
+            />
             <Socials />
         </>
     );

@@ -42,10 +42,14 @@ export interface ClippingBoxFaces {
     zPlusFrontFace: number;
 }
 
-/** Volume clipping state. */
+/** Volume rendering and clipping state. */
 export interface VolumeSettings {
     faces: ClippingBoxFaces;
     showClippingBox: boolean;
+    activeFx: number;
+    wireframe: boolean;
+    dimensions: VolumeDimensions;
+    dataFormat: DataFormat;
 }
 
 /** What every render effect gets to draw with. */
