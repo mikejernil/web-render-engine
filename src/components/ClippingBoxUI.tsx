@@ -30,11 +30,15 @@ const FACE_CONTROLS: Array<{
 const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
     const [open, setOpen] = useState(true);
 
-    //
     const activeFx = settings.activeFx ?? 0;
     const wireframe = settings.wireframe ?? false;
     const isoValue = settings.isoValue ?? DEFAULT_ISO_VALUE;
     const { hasWireframe = false, hasIsoValue = false } = RENDER_FX[activeFx] || RENDER_FX[0];
+
+    const buttonThemeClass =
+        theme === 'light'
+            ? 'bg-black/10 hover:bg-black/20 text-black border-black/20'
+            : 'bg-white/10 hover:bg-white/20 text-white border-white/20';
 
     useEffect(() => {
         if (!hasWireframe) {
@@ -85,7 +89,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                 <button
                     type="button"
                     onClick={() => setOpen(!open)}
-                    className="px-2 py-0.5 rounded border border-current"
+                    className={`px-2 py-0.5 rounded border ${buttonThemeClass}`}
                 >
                     {open ? 'Hide' : 'Show'}
                 </button>
@@ -103,7 +107,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                     onClick={() =>
                                         setSettings((prev) => ({ ...prev, activeFx: index }))
                                     }
-                                    className={`flex-1 px-2 py-1 rounded border border-current ${
+                                    className={`flex-1 px-2 py-1 rounded border ${buttonThemeClass} ${
                                         activeFx === index ? 'font-bold' : 'opacity-50'
                                     }`}
                                 >
@@ -173,7 +177,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                         <button
                             type="button"
                             onClick={resetFaces}
-                            className="px-2 py-0.5 rounded border border-current text-[11px]"
+                            className={`px-2 py-0.5 rounded border text-[11px] ${buttonThemeClass}`}
                         >
                             Reset
                         </button>
