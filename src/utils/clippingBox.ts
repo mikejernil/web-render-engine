@@ -16,6 +16,9 @@ export const INITIAL_CLIPPING_BOX_FACES: ClippingBoxFaces = {
 export const INITIAL_VOLUME_SETTINGS: VolumeSettings = {
     faces: { ...INITIAL_CLIPPING_BOX_FACES },
     showClippingBox: true,
+    activeFx: 0,
+    wireframe: false,
+    isoValue: 100,
 };
 
 /** 12 edge index pairs for a cube. */

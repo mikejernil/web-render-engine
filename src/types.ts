@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import { ComponentType } from 'react';
 
 export type ModelType = 'splat' | 'obj' | 'fbx' | 'volume';
 export type DataFormat = 'uint8' | 'uint16' | 'uint32' | 'float32';
@@ -35,13 +35,17 @@ export interface ClippingBoxFaces {
 export interface VolumeSettings {
     faces: ClippingBoxFaces;
     showClippingBox: boolean;
+    activeFx?: number;
+    wireframe?: boolean;
+    isoValue?: number;
 }
 
 /** What every render effect gets to draw with. */
 export interface RenderFxProps {
     voxels: Uint8Array;
-    wireframe: boolean;
-    volumeSettings?: VolumeSettings;
+    wireframe?: boolean;
+    isoValue?: number;
+    volumeSettings: VolumeSettings;
     volumeDimensions?: VolumeDimensions;
 }
 
@@ -50,4 +54,6 @@ export interface RenderFx {
     name: string;
     Effect: ComponentType<RenderFxProps>;
     hasWireframe?: boolean;
+    /** Shows the IsoValue slider while this effect is picked. */
+    hasIsoValue?: boolean;
 }
