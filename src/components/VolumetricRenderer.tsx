@@ -7,6 +7,7 @@ import { createWireframeEdgePositions } from '../utils/clippingBox';
 import { detectFormat, getMaxValueForFormat } from '../utils/volumeData';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
+import ColormapFx from './volume/ColormapFx';
 
 export interface VolumetricRendererProps {
     /** Volume voxel buffer. `null` while loading. */
@@ -22,6 +23,7 @@ export const DEFAULT_ISO_VALUE = 100;
 /** Available volume render effects. */
 export const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
+    { name: 'Colormap', Effect: ColormapFx },
     {
         name: 'Marching Tetrahedra',
         Effect: MarchingTetrahedraFx,
