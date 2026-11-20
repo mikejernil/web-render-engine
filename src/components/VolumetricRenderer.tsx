@@ -1,11 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import * as THREE from 'three';
 
-import { Html } from '@react-three/drei';
-
-import { useTheme } from '../context/ThemeContext';
-import { DataFormat, RenderFx, VolumeSettings } from '../types';
+import { DataFormat, RenderFx, VolumeDimensions, VolumeSettings } from '../types';
 import { createWireframeEdgePositions } from '../utils/clippingBox';
 import { detectFormat, getMaxValueForFormat } from '../utils/volumeData';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
@@ -15,37 +12,40 @@ import ColormapFx from './volume/ColormapFx';
 import { useWireframe } from './volume/useWireframe';
 
 export interface VolumetricRendererProps {
+    /** Volume voxel buffer. `null` while loading. */
     volumeData: Uint8Array | Uint16Array | Uint32Array | Float32Array | null;
     volumeSettings: VolumeSettings;
-    volumeDimensions?: { x: number; y: number; z: number };
+    volumeDimensions?: VolumeDimensions;
 }
 
+/** Default iso-surface threshold value. */
+export const DEFAULT_ISO_VALUE = 100; // move such things to CONSTANTS
+
 /** The Render FX list. Add an entry here and it shows up in the UI. */
-const RENDER_FX: RenderFx[] = [
-    { name: '3DTextureSlicing', Effect: Basic3DTexture },
-    { name: 'Colormap', Effect: ColormapFx },
+export const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
     {
         name: 'Marching Tetrahedra',
         Effect: MarchingTetrahedraFx,
         hasWireframe: true,
+        hasIsoValue: true,
     },
 ];
 
-/** Bold when on, dimmed when off. */
-const buttonClass = (active: boolean) =>
-    `px-2 py-0 bg-transparent ${active ? 'font-bold' : 'opacity-60'}`;
-
-/** Draws a raw 256^3 volume with the picked Render FX. Supports uint8, uint16, uint32, float32 data types. */
+/**
+ * Renders the active volume effect and clipping box wireframe.
+ * Supports uint8, uint16, uint32, and float32 data types.
+ */
 const VolumetricRenderer = ({
     volumeData,
     volumeSettings,
     volumeDimensions,
 }: VolumetricRendererProps) => {
-    const { theme } = useTheme();
-    const [activeFx, setActiveFx] = useState(0);
-    const { Effect, hasWireframe = false } = RENDER_FX[activeFx];
-    const [wireframe, setWireframe] = useWireframe(hasWireframe);
+    const activeFx = volumeSettings.activeFx ?? 0;
+    const wireframe = volumeSettings.wireframe ?? false;
+    const isoValue = volumeSettings.isoValue ?? DEFAULT_ISO_VALUE;
+
+    const { Effect } = RENDER_FX[activeFx] || RENDER_FX[0];
 
     // Use provided dimensions or default to 256^3
     const dims = volumeDimensions || { x: 256, y: 256, z: 256 };
@@ -64,7 +64,7 @@ const VolumetricRenderer = ({
     const voxels = useMemo(() => {
         if (!volumeData) return null;
 
-        // Normalize all data types to [0, 1] range as Uint8Array for render effects
+        // Normalize all data types to [0, 255] range as Uint8Array for render effects
         const normalized = new Uint8Array(voxelCount);
         for (let i = 0; i < volumeData.length && i < voxelCount; i++) {
             normalized[i] = Math.round((volumeData[i] / maxValue) * 255);
@@ -90,6 +90,7 @@ const VolumetricRenderer = ({
                 <Effect
                     voxels={voxels}
                     wireframe={wireframe}
+                    isoValue={isoValue}
                     volumeSettings={volumeSettings}
                     volumeDimensions={dims}
                 />
@@ -99,34 +100,6 @@ const VolumetricRenderer = ({
                     <lineBasicMaterial color="#00e5ff" />
                 </lineSegments>
             )}
-            <Html position={[0, 0.75, 0]} center>
-                <div
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md whitespace-nowrap select-none ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
-                >
-                    <span>Render FX -</span>
-                    {RENDER_FX.map(({ name }, index) => (
-                        <button
-                            key={name}
-                            className={buttonClass(index === activeFx)}
-                            onClick={() => setActiveFx(index)}
-                        >
-                            {name}
-                        </button>
-                    ))}
-                    {hasWireframe && (
-                        <>
-                            <span className="opacity-30">|</span>
-                            <button
-                                className={buttonClass(wireframe)}
-                                aria-pressed={wireframe}
-                                onClick={() => setWireframe(!wireframe)}
-                            >
-                                Wireframe (W)
-                            </button>
-                        </>
-                    )}
-                </div>
-            </Html>
         </>
     );
 };
