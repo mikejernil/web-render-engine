@@ -8,7 +8,6 @@ import { detectFormat, getMaxValueForFormat } from '../utils/volumeData';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
 import PseudoIsoSurfaceFx from './volume/PseudoIsoSurfaceFx';
-import { useWireframe } from './volume/useWireframe';
 
 export interface VolumetricRendererProps {
     /** Volume voxel buffer. `null` while loading. */
