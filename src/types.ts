@@ -1,4 +1,4 @@
-import { ComponentType } from 'react';
+import type { ComponentType } from 'react';
 
 export type ModelType = 'splat' | 'obj' | 'fbx' | 'glb' | 'volume';
 export type DataFormat = 'uint8' | 'uint16' | 'uint32' | 'float32';
@@ -49,14 +49,12 @@ export interface VolumeSettings {
     showClippingBox: boolean;
     activeFx: number;
     wireframe: boolean;
+    isoValue: number;
     dimensions: VolumeDimensions;
     dataFormat: DataFormat;
     densityThreshold: number;
     opacity: number;
     colorMap: ColorMapPreset;
-    activeFx?: number;
-    wireframe?: boolean;
-    isoValue?: number;
 }
 
 /** What every render effect gets to draw with. */
@@ -64,7 +62,7 @@ export interface RenderFxProps {
     voxels: Uint8Array;
     wireframe?: boolean;
     isoValue?: number;
-    volumeSettings: VolumeSettings;
+    volumeSettings?: VolumeSettings;
     volumeDimensions?: VolumeDimensions;
 }
 

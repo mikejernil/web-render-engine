@@ -18,14 +18,12 @@ export const INITIAL_VOLUME_SETTINGS: VolumeSettings = {
     showClippingBox: true,
     activeFx: 0,
     wireframe: false,
+    isoValue: 100,
     dimensions: { x: 256, y: 256, z: 256 },
     dataFormat: 'uint8',
     densityThreshold: 0.05,
     opacity: 1.0,
     colorMap: 'anatomical',
-    activeFx: 0,
-    wireframe: false,
-    isoValue: 100,
 };
 
 /** 12 edge index pairs for a cube. */

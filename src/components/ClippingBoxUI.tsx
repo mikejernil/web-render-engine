@@ -1,4 +1,4 @@
-import React, { useEffect, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { ControlOutlined, EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 
@@ -9,7 +9,6 @@ import {
     isValidDataFormat,
 } from '../types';
 import { INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
-import { RENDER_FX } from './VolumetricRenderer';
 import { DEFAULT_ISO_VALUE, RENDER_FX } from './VolumetricRenderer';
 
 export interface ClippingBoxUIProps {
@@ -47,11 +46,18 @@ const COLOR_PRESETS: Array<{ label: string; value: ColorMapPreset }> = [
 /** UI panel for volume settings, shaders, and clipping bounds. */
 const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
     const [open, setOpen] = useState(true);
-    const hasWireframe = Boolean(RENDER_FX[settings.activeFx]?.hasWireframe);
 
-    // Toggle wireframe with W key when supported
+    const activeFx = settings.activeFx ?? 0;
+    const wireframe = settings.wireframe ?? false;
+    const isoValue = settings.isoValue ?? DEFAULT_ISO_VALUE;
+    const { hasWireframe = false, hasIsoValue = false } = RENDER_FX[activeFx] || RENDER_FX[0];
+
+    // Reset wireframe when switching to an effect without wireframe support
     useEffect(() => {
-        if (!hasWireframe) return;
+        if (!hasWireframe) {
+            setSettings((prev) => ({ ...prev, wireframe: false }));
+            return;
+        }
 
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key.toLowerCase() !== 'w' || event.repeat) return;
@@ -80,23 +86,6 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
             : 'bg-black/25 text-black font-bold';
 
     // Clamp opposing faces so min never crosses max
-    const activeFx = settings.activeFx ?? 0;
-    const wireframe = settings.wireframe ?? false;
-    const isoValue = settings.isoValue ?? DEFAULT_ISO_VALUE;
-    const { hasWireframe = false, hasIsoValue = false } = RENDER_FX[activeFx] || RENDER_FX[0];
-
-    const buttonThemeClass =
-        theme === 'light'
-            ? 'bg-black/10 hover:bg-black/20 text-black border-black/20'
-            : 'bg-white/10 hover:bg-white/20 text-white border-white/20';
-
-    useEffect(() => {
-        if (!hasWireframe) {
-            setSettings((prev) => ({ ...prev, wireframe: false }));
-            return;
-        }
-    }, [hasWireframe, setSettings]);
-
     const updateFace = (
         key: keyof ClippingBoxFaces,
         value: number,
@@ -133,8 +122,8 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                 <div
                     className={`w-72 max-h-[82vh] p-3.5 rounded-xl border backdrop-blur-xl text-xs space-y-3 select-none overflow-y-auto ${panelBg}`}
                 >
-                    {/* Render FX and fixed wireframe button */}
-                    <div className="space-y-1.5">
+                    {/* Render FX, fixed wireframe button, and ISO slider */}
+                    <div className="space-y-2">
                         <span className="font-semibold text-sm">Render Mode</span>
                         <div className="grid grid-cols-2 gap-1.5">
                             {RENDER_FX.map(({ name }, index) => (
@@ -144,7 +133,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                         setSettings((prev) => ({ ...prev, activeFx: index }))
                                     }
                                     className={`py-2 px-2 text-center rounded-lg cursor-pointer transition ${
-                                        settings.activeFx === index ? activeBtnBg : btnBg
+                                        activeFx === index ? activeBtnBg : btnBg
                                     }`}
                                 >
                                     {name}
@@ -152,7 +141,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                             ))}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                        <div className="grid grid-cols-2 gap-1.5">
                             <div
                                 onClick={() =>
                                     setSettings((prev) => ({
@@ -183,13 +172,39 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                 className={`py-1.5 px-2 text-center rounded-lg transition ${
                                     !hasWireframe
                                         ? `${cardBg} opacity-35 cursor-not-allowed`
-                                        : settings.wireframe
+                                        : wireframe
                                           ? `${activeBtnBg} cursor-pointer`
                                           : `${btnBg} cursor-pointer`
                                 }`}
                             >
                                 Wireframe (W)
                             </div>
+                        </div>
+
+                        <div
+                            className={`px-3 py-2 rounded-lg space-y-1.5 transition ${cardBg} ${
+                                !hasIsoValue ? 'opacity-35 pointer-events-none' : ''
+                            }`}
+                        >
+                            <div className="flex justify-between items-center">
+                                <span className="font-medium">ISO Value</span>
+                                <span className="font-mono">{isoValue}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min={1}
+                                max={254}
+                                step={1}
+                                disabled={!hasIsoValue}
+                                value={isoValue}
+                                onChange={(e) =>
+                                    setSettings((prev) => ({
+                                        ...prev,
+                                        isoValue: Number(e.target.value),
+                                    }))
+                                }
+                                className="volume-slider"
+                            />
                         </div>
                     </div>
 
@@ -227,7 +242,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                                     step={0.01}
                                     value={settings.faces[key]}
                                     onChange={(e) =>
-                                        handleSliderChange(
+                                        updateFace(
                                             key,
                                             parseFloat(e.target.value),
                                             isMin,
