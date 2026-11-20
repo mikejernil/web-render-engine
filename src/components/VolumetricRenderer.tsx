@@ -8,7 +8,6 @@ import { detectFormat, getMaxValueForFormat } from '../utils/volumeData';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
 import Basic3DTexture from './volume/Basic3DTexture';
-import ColormapFx from './volume/ColormapFx';
 
 export interface VolumetricRendererProps {
     /** Volume voxel buffer. `null` while loading. */
@@ -25,7 +24,6 @@ export const DEFAULT_ISO_VALUE = 100;
 export const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
     { name: 'Basic 3DTexture', Effect: Basic3DTexture },
-    { name: 'Colormap', Effect: ColormapFx },
     {
         name: 'Marching Tetrahedra',
         Effect: MarchingTetrahedraFx,
