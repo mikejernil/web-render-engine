@@ -12,13 +12,18 @@ export const INITIAL_CLIPPING_BOX_FACES: ClippingBoxFaces = {
     zPlusFrontFace: 1.0,
 };
 
-/** Default volume clipping settings. */
+/** Default volume settings. */
 export const INITIAL_VOLUME_SETTINGS: VolumeSettings = {
     faces: { ...INITIAL_CLIPPING_BOX_FACES },
     showClippingBox: true,
     activeFx: 0,
     wireframe: false,
     isoValue: 100,
+    dimensions: { x: 256, y: 256, z: 256 },
+    dataFormat: 'uint8',
+    densityThreshold: 0.05,
+    opacity: 1.0,
+    colorMap: 'grayscale',
 };
 
 /** 12 edge index pairs for a cube. */
