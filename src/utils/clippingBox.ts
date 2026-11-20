@@ -23,6 +23,9 @@ export const INITIAL_VOLUME_SETTINGS: VolumeSettings = {
     densityThreshold: 0.05,
     opacity: 1.0,
     colorMap: 'anatomical',
+    activeFx: 0,
+    wireframe: false,
+    isoValue: 100,
 };
 
 /** 12 edge index pairs for a cube. */

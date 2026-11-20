@@ -2,18 +2,22 @@ import { useEffect, useMemo } from 'react';
 
 import * as THREE from 'three';
 
-import { DataFormat, RenderFx, VolumeSettings } from '../types';
+import { DataFormat, RenderFx, VolumeDimensions, VolumeSettings } from '../types';
 import { createWireframeEdgePositions } from '../utils/clippingBox';
 import { detectFormat, getMaxValueForFormat } from '../utils/volumeData';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
 
 export interface VolumetricRendererProps {
+    /** Volume voxel buffer. `null` while loading. */
     volumeData: Uint8Array | Uint16Array | Uint32Array | Float32Array | null;
     volumeSettings: VolumeSettings;
-    volumeDimensions?: { x: number; y: number; z: number };
+    volumeDimensions?: VolumeDimensions;
     isSelected?: boolean;
 }
+
+/** Default iso-surface threshold value. */
+export const DEFAULT_ISO_VALUE = 100;
 
 /** Available volume render effects. */
 export const RENDER_FX: RenderFx[] = [
@@ -22,17 +26,22 @@ export const RENDER_FX: RenderFx[] = [
         name: 'Marching Tetrahedra',
         Effect: MarchingTetrahedraFx,
         hasWireframe: true,
+        hasIsoValue: true,
     },
 ];
 
-/** Draws a volume with the active Render FX. */
+/** Renders the active volume effect and clipping box wireframe. */
 const VolumetricRenderer = ({
     volumeData,
     volumeSettings,
     volumeDimensions,
     isSelected = false,
 }: VolumetricRendererProps) => {
-    const { Effect } = RENDER_FX[volumeSettings.activeFx] ?? RENDER_FX[0];
+    const activeFx = volumeSettings.activeFx ?? 0;
+    const wireframe = volumeSettings.wireframe ?? false;
+    const isoValue = volumeSettings.isoValue ?? DEFAULT_ISO_VALUE;
+
+    const { Effect } = RENDER_FX[activeFx] || RENDER_FX[0];
     const dims = volumeDimensions || volumeSettings.dimensions;
     const voxelCount = dims.x * dims.y * dims.z;
 
@@ -48,6 +57,7 @@ const VolumetricRenderer = ({
     const voxels = useMemo(() => {
         if (!volumeData) return null;
 
+        // Normalize all data types to [0, 255] Uint8Array
         const normalized = new Uint8Array(voxelCount);
         for (let i = 0; i < volumeData.length && i < voxelCount; i++) {
             normalized[i] = Math.round((volumeData[i] / maxValue) * 255);
@@ -72,7 +82,8 @@ const VolumetricRenderer = ({
             {voxels && (
                 <Effect
                     voxels={voxels}
-                    wireframe={volumeSettings.wireframe}
+                    wireframe={wireframe}
+                    isoValue={isoValue}
                     volumeSettings={volumeSettings}
                     volumeDimensions={dims}
                 />

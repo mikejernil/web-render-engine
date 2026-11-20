@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useEffect, useState } from 'react';
 
 import { ControlOutlined, EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 
@@ -10,6 +10,7 @@ import {
 } from '../types';
 import { INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
 import { RENDER_FX } from './VolumetricRenderer';
+import { DEFAULT_ISO_VALUE, RENDER_FX } from './VolumetricRenderer';
 
 export interface ClippingBoxUIProps {
     settings: VolumeSettings;
@@ -17,7 +18,7 @@ export interface ClippingBoxUIProps {
     theme: 'light' | 'dark';
 }
 
-const MIN_GAP = 0.05;
+const MIN_FACE_GAP = 0.05;
 const TYPING_FIELDS = 'input, textarea, select, [contenteditable]';
 
 // Six clipping plane slider configs
@@ -79,7 +80,24 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
             : 'bg-black/25 text-black font-bold';
 
     // Clamp opposing faces so min never crosses max
-    const handleSliderChange = (
+    const activeFx = settings.activeFx ?? 0;
+    const wireframe = settings.wireframe ?? false;
+    const isoValue = settings.isoValue ?? DEFAULT_ISO_VALUE;
+    const { hasWireframe = false, hasIsoValue = false } = RENDER_FX[activeFx] || RENDER_FX[0];
+
+    const buttonThemeClass =
+        theme === 'light'
+            ? 'bg-black/10 hover:bg-black/20 text-black border-black/20'
+            : 'bg-white/10 hover:bg-white/20 text-white border-white/20';
+
+    useEffect(() => {
+        if (!hasWireframe) {
+            setSettings((prev) => ({ ...prev, wireframe: false }));
+            return;
+        }
+    }, [hasWireframe, setSettings]);
+
+    const updateFace = (
         key: keyof ClippingBoxFaces,
         value: number,
         isMin: boolean,
@@ -88,8 +106,8 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
         setSettings((prev) => {
             const pairedValue = prev.faces[pairedKey];
             const clamped = isMin
-                ? Math.min(value, pairedValue - MIN_GAP)
-                : Math.max(value, pairedValue + MIN_GAP);
+                ? Math.min(value, pairedValue - MIN_FACE_GAP)
+                : Math.max(value, pairedValue + MIN_FACE_GAP);
 
             return {
                 ...prev,
