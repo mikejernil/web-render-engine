@@ -7,6 +7,7 @@ import { createWireframeEdgePositions } from '../utils/clippingBox';
 import { detectFormat, getMaxValueForFormat } from '../utils/volumeData';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
+import PseudoIsoSurfaceFx from './volume/PseudoIsoSurfaceFx';
 
 export interface VolumetricRendererProps {
     /** Volume voxel buffer. `null` while loading. */
@@ -21,6 +22,7 @@ export const DEFAULT_ISO_VALUE = 100; // move such things to CONSTANTS
 /** The Render FX list. Add an entry here and it shows up in the UI. */
 export const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
+    { name: 'pseudoIsoSurface', Effect: PseudoIsoSurfaceFx },
     {
         name: 'Marching Tetrahedra',
         Effect: MarchingTetrahedraFx,
