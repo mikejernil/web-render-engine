@@ -32,7 +32,7 @@ function createNoiseSphereVolumeUrl(): string {
         }
     }
 
-    const blobUrl = URL.createObjectURL(new Blob([voxels]));
+    const blobUrl = URL.createObjectURL(new Blob([voxels as BlobPart]));
     generatedUrlCache.noiseSphere = blobUrl;
     return blobUrl;
 }
@@ -64,7 +64,7 @@ function createGyroidCubeVolumeUrl(): string {
         }
     }
 
-    const blobUrl = URL.createObjectURL(new Blob([voxels]));
+    const blobUrl = URL.createObjectURL(new Blob([voxels as BlobPart]));
     generatedUrlCache.gyroidCube = blobUrl;
     return blobUrl;
 }

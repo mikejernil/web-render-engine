@@ -23,7 +23,7 @@ export const INITIAL_VOLUME_SETTINGS: VolumeSettings = {
     dataFormat: 'uint8',
     densityThreshold: 0.05,
     opacity: 1.0,
-    colorMap: 'anatomical',
+    colorMap: 'grayscale',
 };
 
 /** 12 edge index pairs for a cube. */

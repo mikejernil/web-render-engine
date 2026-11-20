@@ -35,12 +35,12 @@ const FACE_CONTROLS: Array<{
     { key: 'zPlusFrontFace', label: 'Z+ Front', isMin: false, pairedKey: 'zMinusBackFace' },
 ];
 
-// Volume transfer color presets
+// Volume shading presets (Grayscale first as default)
 const COLOR_PRESETS: Array<{ label: string; value: ColorMapPreset }> = [
+    { label: 'Grayscale', value: 'grayscale' },
     { label: 'Anatomical', value: 'anatomical' },
     { label: 'Viridis', value: 'viridis' },
     { label: 'Thermal', value: 'thermal' },
-    { label: 'Grayscale', value: 'grayscale' },
 ];
 
 /** UI panel for volume settings, shaders, and clipping bounds. */
@@ -52,7 +52,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
     const isoValue = settings.isoValue ?? DEFAULT_ISO_VALUE;
     const { hasWireframe = false, hasIsoValue = false } = RENDER_FX[activeFx] || RENDER_FX[0];
 
-    // Reset wireframe when switching to an effect without wireframe support
+    // Reset wireframe when unsupported and bind W hotkey when supported
     useEffect(() => {
         if (!hasWireframe) {
             setSettings((prev) => ({ ...prev, wireframe: false }));
@@ -257,7 +257,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
 
                     <div className="h-[1px] bg-current opacity-15" />
 
-                    {/* Density, opacity, and transfer color presets */}
+                    {/* Density, opacity, and shading presets */}
                     <div className="space-y-2">
                         <div className={`px-3 py-2 rounded-lg space-y-1.5 ${cardBg}`}>
                             <div className="flex justify-between items-center">
@@ -303,7 +303,8 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 pt-1">
+                        <div className="font-semibold text-sm pt-1">Shading Types</div>
+                        <div className="grid grid-cols-2 gap-2">
                             {COLOR_PRESETS.map((preset) => (
                                 <div
                                     key={preset.value}

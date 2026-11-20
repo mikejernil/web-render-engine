@@ -22,7 +22,7 @@ const RaycastingFx = ({ voxels, volumeSettings, volumeDimensions }: RenderFxProp
     const dims = volumeDimensions || { x: 256, y: 256, z: 256 };
 
     const texture = useMemo(() => {
-        const result = new THREE.Data3DTexture(voxels, dims.x, dims.y, dims.z);
+        const result = new THREE.Data3DTexture(voxels as BufferSource, dims.x, dims.y, dims.z);
         result.format = THREE.RedFormat;
         result.minFilter = THREE.LinearFilter;
         result.magFilter = THREE.LinearFilter;
@@ -41,7 +41,7 @@ const RaycastingFx = ({ voxels, volumeSettings, volumeDimensions }: RenderFxProp
             u_clipMax: { value: new THREE.Vector3(1, 1, 1) },
             u_densityThreshold: { value: 0.05 },
             u_opacity: { value: 1.0 },
-            u_colorMap: { value: 0 },
+            u_colorMap: { value: COLOR_MAP_INDEX.grayscale },
         }),
         [dims.x, dims.y, dims.z],
     );
