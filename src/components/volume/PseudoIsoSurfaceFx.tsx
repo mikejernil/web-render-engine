@@ -11,7 +11,7 @@ import { useFrame } from '@react-three/fiber';
 
 
 import fragmentShader from '../../shaders/pseudo-isosurface/fragment.glsl';
-import vertexShader from '../../shaders/pseudo-isosurface/vertex.glsl';
+import vertexShader from '../../shaders/volume/vertex.glsl';
 import { RenderFxProps } from '../../types';
 import { DIMENSION } from '../../utils/constants';
 
