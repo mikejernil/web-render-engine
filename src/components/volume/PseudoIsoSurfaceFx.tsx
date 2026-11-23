@@ -13,7 +13,6 @@ import { useFrame } from '@react-three/fiber';
 import fragmentShader from '../../shaders/pseudo-isosurface/fragment.glsl';
 import vertexShader from '../../shaders/volume/vertex.glsl';
 import { RenderFxProps } from '../../types';
-import { DIMENSION } from '../../utils/constants';
 
 
 /** Ray marches the volume inside a unit cube. */
@@ -21,6 +20,8 @@ const PseudoIsoSurfaceFx = ({ voxels ,volumeSettings, volumeDimensions}: RenderF
     const meshRef = useRef<THREE.Mesh>(null);
     
     const dims = volumeDimensions || { x: 256, y: 256, z: 256 };
+
+    const IsoValue: number = volumeSettings.isoValue/255.0;
 
     const texture = useMemo(() => {
         const result = new THREE.Data3DTexture(voxels, dims.x, dims.y, dims.z);
@@ -39,9 +40,9 @@ const PseudoIsoSurfaceFx = ({ voxels ,volumeSettings, volumeDimensions}: RenderF
             u_stepSize: {
                 value: new THREE.Vector3(1 / dims.x, 1 / dims.y, 1 / dims.z),
             },
-            u_isoValue: { value: 50.0},
+            u_isoValue: { value: IsoValue},
         }),
-        [dims.x, dims.y, dims.z],
+        [dims.x, dims.y, dims.z,IsoValue],
     );
 
     // Bind the texture to the shader, and free its GPU memory when it changes or on unmount.
@@ -53,7 +54,6 @@ const PseudoIsoSurfaceFx = ({ voxels ,volumeSettings, volumeDimensions}: RenderF
     // Every frame, put the camera in the cube's local space so the shader can get ray directions.
     useFrame(({ camera }) => {
         meshRef.current?.worldToLocal(camera.getWorldPosition(uniforms.u_cameraPosition.value));
-        uniforms.u_isoValue.value= 50.0;
     });
 
     return (

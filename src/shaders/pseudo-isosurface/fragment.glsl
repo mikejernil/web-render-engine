@@ -62,7 +62,6 @@ void main()
 {
     FragColor = vec4(0.0);
     
-    float isoValue = u_isoValue/255.0;
 
     // Step 1: Initial 3D texture position.
     vec3 dataPosition = oTexCoords;
@@ -87,12 +86,12 @@ void main()
         float fSample = texture(uVolumeTexture, dataPosition).r;
         float fSample2 = texture(uVolumeTexture, dataPosition+directionStep).r;
 
-        if((fSample - isoValue) < 0.0 && (fSample2 - isoValue) >= 0.0)
+        if((fSample - u_isoValue) < 0.0 && (fSample2 - u_isoValue) >= 0.0)
         {
             //If there is a zero crossing, we refine the detected iso-surface location by using bisection based refinement.
             vec3 xN = dataPosition;
             vec3 xF = dataPosition + directionStep;
-            vec3 tc = BiSection(xN,xF,isoValue);
+            vec3 tc = BiSection(xN,xF,u_isoValue);
 
             //This returns the first hit surface //vFragColor = make_float4(xN,1);
             
