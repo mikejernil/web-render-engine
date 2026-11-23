@@ -7,6 +7,8 @@ uniform sampler3D uVolumeTexture;
 uniform vec3 u_cameraPosition;
 uniform vec3 u_stepSize;
 uniform float u_isoValue;
+uniform vec3 u_clipMin;
+uniform vec3 u_clipMax;
 
 const int MAX_SAMPLES = 300;
 const vec3 texMin = vec3(0.0);
@@ -84,6 +86,9 @@ void main()
 
         if (bStop)
             break;
+
+        bool isClipped = dot(sign(dataPosition - u_clipMin), sign(u_clipMax - dataPosition)) < 3.0;
+        if (isClipped) continue;
 
         // Sample the red channel of the 3D texture.
         float fSample = texture(uVolumeTexture, dataPosition).r;
