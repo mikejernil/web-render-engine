@@ -23,9 +23,15 @@ interface ViewerProps {
     models: Model[];
     canvasRef: React.RefObject<HTMLCanvasElement>;
     volumeSettings: VolumeSettings;
+    selectedModelIndex: number | null;
 }
 
-const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) => {
+const Viewer: React.FC<ViewerProps> = ({
+    models,
+    canvasRef,
+    volumeSettings,
+    selectedModelIndex,
+}) => {
     const { theme } = useTheme();
 
     return (
@@ -60,7 +66,12 @@ const Viewer: React.FC<ViewerProps> = ({ models, canvasRef, volumeSettings }) =>
                 </GizmoHelper>
 
                 {models.map((model, index) => (
-                    <Models key={index} model={model} volumeSettings={volumeSettings} />
+                    <Models
+                        key={model.id}
+                        model={model}
+                        volumeSettings={volumeSettings}
+                        isSelected={selectedModelIndex === index}
+                    />
                 ))}
             </Canvas>
         </div>
@@ -124,26 +135,34 @@ function VolumeModel({ model, volumeSettings }: { model: Model; volumeSettings: 
     );
 }
 
-function Models({ model, volumeSettings }: { model: Model; volumeSettings: VolumeSettings }) {
+function Models({
+    model,
+    volumeSettings,
+    isSelected,
+}: {
+    model: Model;
+    volumeSettings: VolumeSettings;
+    isSelected: boolean;
+}) {
     return (
         <Suspense fallback={<Box />}>
             {model.type === 'splat' && (
-                <TransformControls mode="translate">
+                <TransformControls mode="translate" enabled={isSelected}>
                     <Splat src={model.url} />
                 </TransformControls>
             )}
             {model.type === 'fbx' && (
-                <TransformControls mode="translate">
+                <TransformControls mode="translate" enabled={isSelected}>
                     <FbxModel url={model.url} />
                 </TransformControls>
             )}
             {model.type === 'obj' && (
-                <TransformControls mode="translate">
+                <TransformControls mode="translate" enabled={isSelected}>
                     <ObjModel url={model.url} />
                 </TransformControls>
             )}
             {model.type === 'volume' && (
-                <TransformControls mode="translate">
+                <TransformControls mode="translate" enabled={isSelected}>
                     <VolumeModel model={model} volumeSettings={volumeSettings} />
                 </TransformControls>
             )}

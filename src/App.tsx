@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { CloudUploadOutlined, PlusCircleOutlined, UploadOutlined } from '@ant-design/icons';
 
 import ClippingBoxUI from './components/ClippingBoxUI';
+import Hierarchy from './components/Hierarchy';
 import Screenshot from './components/Screenshot';
 import Socials from './components/Socials';
 import ThemeSwitch from './components/ThemeSwitch';
@@ -28,6 +29,7 @@ function App() {
     const [load, setLoad] = useState(false);
 
     const [models, setModels] = useState<Model[]>([]);
+    const [selectedModelIndex, setSelectedModelIndex] = useState<number | null>(null);
     const [volumeSettings, setVolumeSettings] = useState<VolumeSettings>(INITIAL_VOLUME_SETTINGS);
     const [tempVolumeDimensions, setTempVolumeDimensions] = useState({
         x: 256,
@@ -35,6 +37,13 @@ function App() {
         z: 256,
     });
     const [tempVolumeDataType, setTempVolumeDataType] = useState<DataFormat>('uint8');
+
+    // Autoselect the first model when only one exists
+    useEffect(() => {
+        if (models.length === 1 && selectedModelIndex === null) {
+            setSelectedModelIndex(0);
+        }
+    }, [models.length, selectedModelIndex]);
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -44,6 +53,8 @@ function App() {
             if (!type) return alert('Unsupported file format');
 
             const newModel: Model = {
+                // prevents React key issues when models are deleted
+                id: `model_${Date.now()}_${Math.random()}`,
                 url: fileUrl,
                 name: file.name,
                 type,
@@ -52,7 +63,9 @@ function App() {
                     volumeDataFormat: tempVolumeDataType,
                 }),
             };
-            setModels([...models, newModel]);
+            const updatedModels = [...models, newModel];
+            setModels(updatedModels);
+            setSelectedModelIndex(updatedModels.length - 1);
         }
     };
 
@@ -69,6 +82,7 @@ function App() {
             if (!type) return alert('Unsupported URL file format');
 
             const newModel: Model = {
+                id: `model_${Date.now()}_${Math.random()}`,
                 url,
                 name: pathname.split('/').pop() ?? '',
                 type,
@@ -77,7 +91,22 @@ function App() {
                     volumeDataFormat: tempVolumeDataType,
                 }),
             };
-            setModels([...models, newModel]);
+            const updatedModels = [...models, newModel];
+            setModels(updatedModels);
+            setSelectedModelIndex(updatedModels.length - 1);
+        }
+    };
+
+    const handleDeleteModel = (id: string) => {
+        const index = models.findIndex((m) => m.id === id);
+        if (index === -1) return;
+
+        const updatedModels = models.filter((_, i) => i !== index);
+        setModels(updatedModels);
+        if (selectedModelIndex === index) {
+            setSelectedModelIndex(updatedModels.length > 0 ? 0 : null);
+        } else if (selectedModelIndex !== null && selectedModelIndex > index) {
+            setSelectedModelIndex(selectedModelIndex - 1);
         }
     };
 
@@ -239,7 +268,19 @@ function App() {
                 theme={theme}
             />
 
-            <Viewer models={models} canvasRef={canvasRef} volumeSettings={volumeSettings} />
+            <Hierarchy
+                models={models}
+                selectedModelIndex={selectedModelIndex}
+                onSelectModel={setSelectedModelIndex}
+                onDeleteModel={handleDeleteModel}
+            />
+
+            <Viewer
+                models={models}
+                canvasRef={canvasRef}
+                volumeSettings={volumeSettings}
+                selectedModelIndex={selectedModelIndex}
+            />
             <Socials />
         </>
     );

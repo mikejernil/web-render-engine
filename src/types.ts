@@ -10,11 +10,15 @@ export interface VolumeDimensions {
 }
 
 export interface Model {
+    // Added ID for hierarchy ,delete was replacing the pos of the other models
+    id: string;
     url: string;
     name: string;
     type: ModelType;
     volumeDimensions?: VolumeDimensions;
     volumeDataFormat?: DataFormat;
+    // Added this to move the model independently and store the moved transform
+    position?: [number, number, number];
 }
 
 export const isValidDataFormat = (value: unknown): value is DataFormat => {
