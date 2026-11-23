@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC } from 'react';
 
 import { DeleteOutlined } from '@ant-design/icons';
 
@@ -19,28 +19,16 @@ const Hierarchy: FC<HierarchyProps> = ({
     onDeleteModel,
 }) => {
     const { theme } = useTheme();
-    const [open, setOpen] = useState(false);
 
     return (
         <div
-            className={`fixed left-2 top-1/2 z-10 p-2 gap-2 flex flex-col rounded-md backdrop-blur-md select-none w-80 max-h-[70vh] ${
+            className={`fixed left-2 top-[65%] z-10 p-2 gap-2 flex flex-col rounded-md backdrop-blur-md select-none w-80 ${
                 theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'
             }`}
         >
-            <div
-                className={`p-2 gap-2 flex items-center justify-center rounded-md cursor-pointer flex-shrink-0 ${
-                    theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-black/10'
-                }`}
-                onClick={() => setOpen(!open)}
-            >
-                {open ? `Hierarchy ↓` : `Hierarchy →`}
-            </div>
+            <div className={`text-base font-semibold text-center`}>Hierarchy</div>
 
-            <div
-                className={`overflow-y-auto flex-1 ${
-                    open ? 'transition-all duration-300' : 'hidden'
-                }`}
-            >
+            <div className={`overflow-y-auto max-h-[calc(4*44px+8px)]`}>
                 {models.length === 0 ? (
                     <div
                         className={`py-2 text-center text-sm ${
