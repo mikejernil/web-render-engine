@@ -60,6 +60,8 @@ vec4 PhongLighting(vec3 L, vec3 N, vec3 V, float specPower, vec3 diffuseColor)
 
 void main()
 {
+    FragColor = vec4(0.0);
+    
     float isoValue = u_isoValue/255.0;
 
     // Step 1: Initial 3D texture position.
