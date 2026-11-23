@@ -46,8 +46,11 @@ vec3 GetGradient(vec3 uvW)
 
     s1.z = texture(uVolumeTexture, uvW-vec3(0.0,0.0,DELTA)).x ;
     s2.z = texture(uVolumeTexture, uvW+vec3(0.0,0.0,DELTA)).x ;
+
+    // get gradient:
+    vec3 gradient = (s1-s2);
     
-    return (normalize((s1-s2)/2.0));         
+    return (length(gradient)>0.0?normalize(gradient):vec3(0.0));
 }
 
 vec4 PhongLighting(vec3 L, vec3 N, vec3 V, float specPower, vec3 diffuseColor)
