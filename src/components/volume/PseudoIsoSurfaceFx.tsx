@@ -17,27 +17,31 @@ import { DIMENSION } from '../../utils/constants';
 
 
 /** Ray marches the volume inside a unit cube. */
-const PseudoIsoSurfaceFx = ({ voxels }: RenderFxProps) => {
+const PseudoIsoSurfaceFx = ({ voxels ,volumeSettings, volumeDimensions}: RenderFxProps) => {
     const meshRef = useRef<THREE.Mesh>(null);
     
+    const dims = volumeDimensions || { x: 256, y: 256, z: 256 };
+
     const texture = useMemo(() => {
-        const result = new THREE.Data3DTexture(voxels, DIMENSION, DIMENSION, DIMENSION);
+        const result = new THREE.Data3DTexture(voxels, dims.x, dims.y, dims.z);
         result.format = THREE.RedFormat;
         result.minFilter = THREE.LinearFilter;
         result.magFilter = THREE.LinearFilter;
         result.needsUpdate = true;
 
         return result;
-    }, [voxels]);
+    }, [voxels,dims.x, dims.y, dims.z]);
 
     const uniforms = useMemo(
         () => ({
             uVolumeTexture: { value: null as THREE.Data3DTexture | null },
             u_cameraPosition: { value: new THREE.Vector3() },
-            u_stepSize: { value: new THREE.Vector3().setScalar(1 / DIMENSION) },
+            u_stepSize: {
+                value: new THREE.Vector3(1 / dims.x, 1 / dims.y, 1 / dims.z),
+            },
             u_isoValue: { value: 50.0},
         }),
-        [],
+        [dims.x, dims.y, dims.z],
     );
 
     // Bind the texture to the shader, and free its GPU memory when it changes or on unmount.
