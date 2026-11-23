@@ -191,8 +191,10 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
                             </div>
                             <input
                                 type="range"
-                                min={-1}
-                                max={1}
+                                //min={-1}
+                                //max={1}
+                                min={-0.5}
+                                max={0.5}
                                 step={0.01}
                                 value={settings.faces[key]}
                                 onChange={(e) =>

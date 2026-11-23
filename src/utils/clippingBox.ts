@@ -4,12 +4,12 @@ import { ClippingBoxFaces, VolumeSettings } from '../types';
 
 /** Default [-1, 1] face bounds. */
 export const INITIAL_CLIPPING_BOX_FACES: ClippingBoxFaces = {
-    xMinusSideFace: -1.0,
-    xPlusSideFace: 1.0,
-    yMinusBottomFace: -1.0,
-    yPlusTopFace: 1.0,
-    zMinusBackFace: -1.0,
-    zPlusFrontFace: 1.0,
+    xMinusSideFace: -0.5,
+    xPlusSideFace: 0.5,
+    yMinusBottomFace: -0.5,
+    yPlusTopFace: 0.5,
+    zMinusBackFace: -0.5,
+    zPlusFrontFace: 0.5,
 };
 
 /** Default volume clipping settings. */
