@@ -22,7 +22,10 @@ export const DEFAULT_ISO_VALUE = 100; // move such things to CONSTANTS
 /** The Render FX list. Add an entry here and it shows up in the UI. */
 export const RENDER_FX: RenderFx[] = [
     { name: 'Raycasting', Effect: RaycastingFx },
-    { name: 'pseudoIsoSurface', Effect: PseudoIsoSurfaceFx },
+    { 
+        name: 'pseudoIsoSurface', Effect: PseudoIsoSurfaceFx,
+        hasIsoValue: true,
+    },
     {
         name: 'Marching Tetrahedra',
         Effect: MarchingTetrahedraFx,

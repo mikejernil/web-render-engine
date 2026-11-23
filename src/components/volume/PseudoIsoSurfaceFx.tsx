@@ -20,11 +20,7 @@ const PseudoIsoSurfaceFx = ({ voxels ,volumeSettings, volumeDimensions}: RenderF
     const meshRef = useRef<THREE.Mesh>(null);
     
     const dims = volumeDimensions || { x: 256, y: 256, z: 256 };
-    const boxClipping = volumeSettings.faces;
     
-
-    const IsoValue: number = volumeSettings.isoValue/255.0;
-
 
 
     const texture = useMemo(() => {
@@ -44,11 +40,11 @@ const PseudoIsoSurfaceFx = ({ voxels ,volumeSettings, volumeDimensions}: RenderF
             u_stepSize: {
                 value: new THREE.Vector3(1 / dims.x, 1 / dims.y, 1 / dims.z),
             },
-            u_isoValue: { value: IsoValue},
+            u_isoValue: { value: 0},
             u_clipMin: { value: new THREE.Vector3(0, 0, 0) },
             u_clipMax: { value: new THREE.Vector3(1, 1, 1) },
         }),
-        [dims.x, dims.y, dims.z,IsoValue],
+        [dims.x, dims.y, dims.z]
     );
 
 
@@ -75,7 +71,10 @@ const PseudoIsoSurfaceFx = ({ voxels ,volumeSettings, volumeDimensions}: RenderF
                 (faces.yPlusTopFace + 1) * 0.5,
                 (faces.zPlusFrontFace + 1) * 0.5,
             );
+
+            uniforms.u_isoValue.value = volumeSettings.isoValue/255.0;
         }
+
     });
 
     return (
