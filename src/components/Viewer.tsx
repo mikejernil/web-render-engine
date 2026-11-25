@@ -11,7 +11,6 @@ import {
     OrbitControls,
     PivotControls,
     Splat,
-    TransformControls,
     useGLTF,
 } from '@react-three/drei';
 import { Canvas, useLoader } from '@react-three/fiber';

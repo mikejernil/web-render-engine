@@ -44,8 +44,9 @@ function App() {
             ...newModel,
             id: `model_${Date.now()}_${Math.random()}`,
         };
-        setModels((prev) => [...prev, modelWithId]);
-        setSelectedModelIndex((prev) => (prev === null ? 0 : models.length));
+        const updatedModels = [...models, modelWithId];
+        setModels(updatedModels);
+        setSelectedModelIndex(updatedModels.length - 1);
     };
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -222,6 +223,13 @@ function App() {
                         />
                     </div>
                 )}
+
+                <Hierarchy
+                    models={models}
+                    selectedModelIndex={selectedModelIndex}
+                    onSelectModel={setSelectedModelIndex}
+                    onDeleteModel={handleDeleteModel}
+                />
             </div>
 
             <div className="fixed top-2 right-2 z-10 flex gap-2">
@@ -236,13 +244,6 @@ function App() {
                     theme={theme}
                 />
             )}
-
-            <Hierarchy
-                models={models}
-                selectedModelIndex={selectedModelIndex}
-                onSelectModel={setSelectedModelIndex}
-                onDeleteModel={handleDeleteModel}
-            />
 
             <Viewer
                 models={models}

@@ -18,7 +18,6 @@ export interface Model {
     type: ModelType;
     volumeDimensions?: VolumeDimensions;
     volumeDataFormat?: DataFormat;
-    // Added this to move the model independently and store the moved transform
     position?: [number, number, number];
 }
 

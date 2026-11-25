@@ -22,9 +22,11 @@ const Hierarchy: FC<HierarchyProps> = ({
 
     return (
         <div
-            className={`fixed left-2 top-[65%] z-10 p-2 gap-2 flex flex-col rounded-md backdrop-blur-md select-none w-80 ${
-                theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'
-            }`}
+            className={`${
+                theme === 'dark'
+                    ? 'bg-neutral-900/75 text-white border-white/10'
+                    : 'bg-black/15 text-black border-black/10'
+            } p-2 gap-2 flex flex-col rounded-md backdrop-blur-md select-none w-72 border`}
         >
             <div className={`text-base font-semibold text-center`}>Hierarchy</div>
 
