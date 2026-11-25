@@ -42,33 +42,41 @@ const Hierarchy: FC<HierarchyProps> = ({
                 ) : (
                     <div className="space-y-1">
                         {models.map((model, index) => (
-                            <div
-                                key={model.id}
-                                className={`p-2 rounded-md cursor-pointer select-none transition-colors flex items-center justify-between ${
-                                    selectedModelIndex === index
-                                        ? theme === 'dark'
-                                            ? 'bg-white/20'
-                                            : 'bg-black/20'
-                                        : theme === 'dark'
-                                          ? 'hover:bg-white/10'
-                                          : 'hover:bg-black/10'
-                                }`}
-                                onClick={() => onSelectModel(index)}
-                            >
-                                <span className="flex-1 truncate">{model.name}</span>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDeleteModel(model.id);
-                                    }}
-                                    className={`ml-2 flex-shrink-0 outline-none border-none bg-transparent p-1 transition-all opacity-50 hover:opacity-100 hover:scale-110 focus:outline-none ${
-                                        theme === 'dark' ? 'text-white' : 'text-black'
+                            <div key={model.id}>
+                                <div
+                                    className={`p-2 rounded-md cursor-pointer select-none transition-colors flex items-center justify-between ${
+                                        selectedModelIndex === index
+                                            ? theme === 'dark'
+                                                ? 'bg-white/20'
+                                                : 'bg-black/20'
+                                            : theme === 'dark'
+                                              ? 'hover:bg-white/10'
+                                              : 'hover:bg-black/10'
                                     }`}
-                                    title="Delete model"
+                                    onClick={() => onSelectModel(index)}
                                 >
-                                    <DeleteOutlined className="text-base" />
-                                </button>
+                                    <span className="flex-1 truncate">{model.name}</span>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDeleteModel(model.id);
+                                        }}
+                                        className={`ml-2 flex-shrink-0 outline-none border-none bg-transparent p-1 transition-all opacity-50 hover:opacity-100 hover:scale-110 focus:outline-none ${
+                                            theme === 'dark' ? 'text-white' : 'text-black'
+                                        }`}
+                                        title="Delete model"
+                                    >
+                                        <DeleteOutlined className="text-base" />
+                                    </button>
+                                </div>
+                                {index < models.length - 1 && (
+                                    <div
+                                        className={`h-[1px] my-1 ${
+                                            theme === 'dark' ? 'bg-white/10' : 'bg-black/10'
+                                        }`}
+                                    />
+                                )}
                             </div>
                         ))}
                     </div>
