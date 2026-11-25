@@ -67,7 +67,7 @@ const Viewer: React.FC<ViewerProps> = ({
 
                 {models.map((model, index) => (
                     <Models
-                        key={index}
+                        key={model.id}
                         model={model}
                         volumeSettings={volumeSettings}
                         isSelected={selectedModelIndex === index}

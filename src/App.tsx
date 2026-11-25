@@ -7,6 +7,7 @@ import {
 } from '@ant-design/icons';
 
 import ClippingBoxUI from './components/ClippingBoxUI';
+import Hierarchy from './components/Hierarchy';
 import SampleSelector from './components/SampleSelector';
 import Screenshot from './components/Screenshot';
 import Socials from './components/Socials';
@@ -31,22 +32,23 @@ const getModelType = (path: string): ModelType | null => {
 
 function App() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [showSamples, setShowSamples] = useState(false); // Closed by default
+    const [showSamples, setShowSamples] = useState(false);
     const [url, setUrl] = useState('');
 
     const [models, setModels] = useState<Model[]>([]);
     const [selectedModelIndex, setSelectedModelIndex] = useState<number | null>(null);
     const [volumeSettings, setVolumeSettings] = useState<VolumeSettings>(INITIAL_VOLUME_SETTINGS);
 
-    // Append model to scene and focus it
     const addModel = (newModel: Model) => {
-        setModels((prev) => {
-            setSelectedModelIndex(prev.length);
-            return [...prev, newModel];
-        });
+        const modelWithId = {
+            ...newModel,
+            id: `model_${Date.now()}_${Math.random()}`,
+        };
+        const updatedModels = [...models, modelWithId];
+        setModels(updatedModels);
+        setSelectedModelIndex(updatedModels.length - 1);
     };
 
-    // Handle local file input
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -62,10 +64,9 @@ function App() {
                 volumeDimensions: volumeSettings.dimensions,
                 volumeDataFormat: volumeSettings.dataFormat,
             }),
-        });
+        } as Model);
     };
 
-    // Handle remote URL input
     const handleLoadUrl = () => {
         if (!url) return;
 
@@ -87,10 +88,9 @@ function App() {
                 volumeDimensions: volumeSettings.dimensions,
                 volumeDataFormat: volumeSettings.dataFormat,
             }),
-        });
+        } as Model);
     };
 
-    // Load clicked sample card
     const handleSelectSample = (sample: SampleModel) => {
         const modelUrl = sample.createUrl ? sample.createUrl() : sample.url;
         if (!modelUrl) return;
@@ -111,7 +111,20 @@ function App() {
                 volumeDimensions: sample.volumeDimensions ?? volumeSettings.dimensions,
                 volumeDataFormat: sample.volumeDataFormat ?? volumeSettings.dataFormat,
             }),
-        });
+        } as Model);
+    };
+
+    const handleDeleteModel = (id: string) => {
+        const index = models.findIndex((m) => m.id === id);
+        if (index === -1) return;
+
+        const updatedModels = models.filter((_, i) => i !== index);
+        setModels(updatedModels);
+        if (selectedModelIndex === index) {
+            setSelectedModelIndex(updatedModels.length > 0 ? 0 : null);
+        } else if (selectedModelIndex !== null && selectedModelIndex > index) {
+            setSelectedModelIndex(selectedModelIndex - 1);
+        }
     };
 
     const { theme } = useTheme();
@@ -135,7 +148,6 @@ function App() {
 
     return (
         <>
-            {/* Top-left model loader menu */}
             <div className="flex flex-col gap-2 fixed top-2 left-2 z-10 w-72">
                 <div
                     className={`text-3xl font-bold select-none ${
@@ -211,15 +223,20 @@ function App() {
                         />
                     </div>
                 )}
+
+                <Hierarchy
+                    models={models}
+                    selectedModelIndex={selectedModelIndex}
+                    onSelectModel={setSelectedModelIndex}
+                    onDeleteModel={handleDeleteModel}
+                />
             </div>
 
-            {/* Top-right actions */}
             <div className="fixed top-2 right-2 z-10 flex gap-2">
                 <ThemeSwitch />
                 <Screenshot canvasRef={canvasRef} theme={theme} />
             </div>
 
-            {/* Volume settings only shown when a volume object is selected */}
             {isVolumeFocused && (
                 <ClippingBoxUI
                     settings={volumeSettings}
