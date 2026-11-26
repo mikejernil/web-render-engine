@@ -11,11 +11,14 @@ export interface VolumeDimensions {
 }
 
 export interface Model {
+    // Added ID for hierarchy ,delete was replacing the pos of the other models
+    id: string;
     url: string;
     name: string;
     type: ModelType;
     volumeDimensions?: VolumeDimensions;
     volumeDataFormat?: DataFormat;
+    position?: [number, number, number];
 }
 
 export interface SampleModel {
