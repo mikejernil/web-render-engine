@@ -1,8 +1,14 @@
 import { useRef, useState } from 'react';
 
-import { CloudUploadOutlined, PlusCircleOutlined, UploadOutlined } from '@ant-design/icons';
+import {
+    CloudUploadOutlined,
+    PlusCircleOutlined,
+    UploadOutlined,
+} from '@ant-design/icons';
 
 import ClippingBoxUI from './components/ClippingBoxUI';
+import Hierarchy from './components/Hierarchy';
+import SampleSelector from './components/SampleSelector';
 import Screenshot from './components/Screenshot';
 import Socials from './components/Socials';
 import ThemeSwitch from './components/ThemeSwitch';
@@ -11,221 +17,219 @@ import Viewer from './components/Viewer';
 import { INITIAL_VOLUME_SETTINGS } from './utils/clippingBox';
 
 import { useTheme } from './context/ThemeContext';
-import { DataFormat, Model, ModelType, VolumeSettings, isValidDataFormat } from './types';
+import { Model, ModelType, SampleModel, VolumeSettings } from './types';
 
+// Resolve model type from file extension
 const getModelType = (path: string): ModelType | null => {
     const lower = path.toLowerCase();
     if (lower.endsWith('.splat')) return 'splat';
     if (lower.endsWith('.fbx')) return 'fbx';
     if (lower.endsWith('.obj')) return 'obj';
+    if (lower.endsWith('.glb') || lower.endsWith('.gltf')) return 'glb';
     if (lower.endsWith('.raw') || lower.endsWith('.vol')) return 'volume';
     return null;
 };
 
 function App() {
-    const [viewGS, setViewGS] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showSamples, setShowSamples] = useState(false);
     const [url, setUrl] = useState('');
-    const [load, setLoad] = useState(false);
 
     const [models, setModels] = useState<Model[]>([]);
+    const [selectedModelIndex, setSelectedModelIndex] = useState<number | null>(null);
     const [volumeSettings, setVolumeSettings] = useState<VolumeSettings>(INITIAL_VOLUME_SETTINGS);
-    const [tempVolumeDimensions, setTempVolumeDimensions] = useState({
-        x: 256,
-        y: 256,
-        z: 256,
-    });
-    const [tempVolumeDataType, setTempVolumeDataType] = useState<DataFormat>('uint8');
+
+    const addModel = (newModel: Model) => {
+        const modelWithId = {
+            ...newModel,
+            id: `model_${Date.now()}_${Math.random()}`,
+        };
+        const updatedModels = [...models, modelWithId];
+        setModels(updatedModels);
+        setSelectedModelIndex(updatedModels.length - 1);
+    };
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            const fileUrl = URL.createObjectURL(file);
-            const type = getModelType(file.name);
-            if (!type) return alert('Unsupported file format');
+        if (!file) return;
 
-            const newModel: Model = {
-                url: fileUrl,
-                name: file.name,
-                type,
-                ...(type === 'volume' && {
-                    volumeDimensions: tempVolumeDimensions,
-                    volumeDataFormat: tempVolumeDataType,
-                }),
-            };
-            setModels([...models, newModel]);
-        }
+        const type = getModelType(file.name);
+        if (!type) return alert('Unsupported file format');
+
+        addModel({
+            url: URL.createObjectURL(file),
+            name: file.name,
+            type,
+            ...(type === 'volume' && {
+                volumeDimensions: volumeSettings.dimensions,
+                volumeDataFormat: volumeSettings.dataFormat,
+            }),
+        } as Model);
     };
 
-    const loadUrlModel = () => {
-        if (url) {
-            let pathname = url;
-            try {
-                pathname = new URL(url, window.location.href).pathname;
-            } catch (error) {
-                console.error('Could not parse model URL, using it as-is:', url, error);
-            }
+    const handleLoadUrl = () => {
+        if (!url) return;
 
-            const type = getModelType(pathname);
-            if (!type) return alert('Unsupported URL file format');
-
-            const newModel: Model = {
-                url,
-                name: pathname.split('/').pop() ?? '',
-                type,
-                ...(type === 'volume' && {
-                    volumeDimensions: tempVolumeDimensions,
-                    volumeDataFormat: tempVolumeDataType,
-                }),
-            };
-            setModels([...models, newModel]);
+        let pathname = url;
+        try {
+            pathname = new URL(url, window.location.href).pathname;
+        } catch (error) {
+            console.error('Could not parse model URL, using it as-is:', url, error);
         }
+
+        const type = getModelType(pathname);
+        if (!type) return alert('Unsupported URL file format');
+
+        addModel({
+            url,
+            name: pathname.split('/').pop() ?? 'Model',
+            type,
+            ...(type === 'volume' && {
+                volumeDimensions: volumeSettings.dimensions,
+                volumeDataFormat: volumeSettings.dataFormat,
+            }),
+        } as Model);
     };
 
-    if (load) {
-        loadUrlModel();
-        setLoad(false);
-    }
+    const handleSelectSample = (sample: SampleModel) => {
+        const modelUrl = sample.createUrl ? sample.createUrl() : sample.url;
+        if (!modelUrl) return;
+
+        if (sample.type === 'volume') {
+            setVolumeSettings((prev) => ({
+                ...prev,
+                dimensions: sample.volumeDimensions ?? prev.dimensions,
+                dataFormat: sample.volumeDataFormat ?? prev.dataFormat,
+            }));
+        }
+
+        addModel({
+            url: modelUrl,
+            name: sample.name,
+            type: sample.type,
+            ...(sample.type === 'volume' && {
+                volumeDimensions: sample.volumeDimensions ?? volumeSettings.dimensions,
+                volumeDataFormat: sample.volumeDataFormat ?? volumeSettings.dataFormat,
+            }),
+        } as Model);
+    };
+
+    const handleDeleteModel = (id: string) => {
+        const index = models.findIndex((m) => m.id === id);
+        if (index === -1) return;
+
+        const updatedModels = models.filter((_, i) => i !== index);
+        setModels(updatedModels);
+        if (selectedModelIndex === index) {
+            setSelectedModelIndex(updatedModels.length > 0 ? 0 : null);
+        } else if (selectedModelIndex !== null && selectedModelIndex > index) {
+            setSelectedModelIndex(selectedModelIndex - 1);
+        }
+    };
 
     const { theme } = useTheme();
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
+    const selectedModel = selectedModelIndex !== null ? models[selectedModelIndex] : null;
+    const isVolumeFocused = selectedModel?.type === 'volume';
+
+    const panelBg =
+        theme === 'dark'
+            ? 'bg-neutral-900/75 text-white border-white/10'
+            : 'bg-black/15 text-black border-black/10';
+    const buttonBg =
+        theme === 'dark'
+            ? 'bg-white/15 hover:bg-white/25 text-white'
+            : 'bg-black/15 hover:bg-black/25 text-black';
+    const inputStyle =
+        theme === 'dark'
+            ? 'bg-white/15 placeholder:text-white/50 border-white/15 text-white'
+            : 'bg-black/20 placeholder:text-black/50 border-black/20 text-black';
+
     return (
         <>
-            <div className="flex flex-col gap-2 fixed top-2 left-2 z-10">
+            <div className="flex flex-col gap-2 fixed top-2 left-2 z-10 w-72">
                 <div
                     className={`text-3xl font-bold select-none ${
-                        theme == 'dark' ? 'text-white' : 'text-black'
+                        theme === 'dark' ? 'text-white' : 'text-black'
                     }`}
                 >
                     Web Render Engine
                 </div>
+
                 <div
-                    className={`p-2 gap-2 flex items-center justify-center rounded-md backdrop-blur-md cursor-pointer select-none ${
-                        theme == 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'
-                    }`}
-                    onClick={() => setViewGS(!viewGS)}
+                    className={`p-2.5 gap-2 flex items-center justify-center rounded-lg border backdrop-blur-md cursor-pointer select-none ${panelBg}`}
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
                     <PlusCircleOutlined />
-                    {viewGS ? `Close` : `Load model`}
+                    <span>{isMenuOpen ? 'Close' : 'Load model'}</span>
                 </div>
-                {viewGS && (
-                    <>
+
+                {isMenuOpen && (
+                    <div
+                        className={`p-3 rounded-xl border backdrop-blur-xl flex flex-col gap-3 ${panelBg}`}
+                    >
                         <input
-                            className={`px-4 py-2 w-full rounded-md border-2 border-solid backdrop-blur-xl ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10' : 'bg-black/25 placeholder:text-black/50 border-black/10'}`}
+                            className={`px-3.5 py-2 w-full rounded-lg border border-solid outline-none ${inputStyle}`}
                             placeholder="Place Url..."
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
                         />
+
                         <div className="flex gap-2 w-full">
                             <div
-                                className={`h-10 p-2 gap-2 flex items-center justify-center rounded-md backdrop-blur-md cursor-pointer select-none ${theme == 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
-                                onClick={() => setLoad(true)}
+                                className={`h-10 px-4 gap-2 flex items-center justify-center rounded-lg cursor-pointer select-none transition ${buttonBg}`}
+                                onClick={handleLoadUrl}
                             >
                                 <CloudUploadOutlined />
-                                {'Load '}
+                                <span>Load</span>
                             </div>
                             <div
-                                className={`w-full p-2 gap-2 flex items-center justify-center rounded-md backdrop-blur-md cursor-pointer select-none ${theme == 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
-                                onClick={() => {
-                                    setUrl(
-                                        'https://huggingface.co/cakewalk/splat-data/resolve/main/nike.splat',
-                                    );
-                                    setLoad(true);
-                                }}
+                                className={`flex-1 h-10 p-2 gap-2 flex items-center justify-center rounded-lg cursor-pointer select-none transition ${buttonBg}`}
+                                onClick={() => setShowSamples(!showSamples)}
                             >
                                 <UploadOutlined />
-                                {'Sample File'}
+                                <span>{showSamples ? 'Hide Samples' : 'Sample Files'}</span>
                             </div>
                         </div>
-                        <div className="">
-                            <div className="flex items-center justify-center">
-                                <div
-                                    className={`flex-grow h-[.1rem] m-2 backdrop-blur-md ${theme == 'light' ? 'bg-black/50' : 'bg-white/50'}`}
-                                />
-                                <div
-                                    className={`${theme == 'light' ? 'text-black' : 'text-white'}`}
-                                >
-                                    or
-                                </div>
-                                <div
-                                    className={`flex-grow h-[.1rem] m-2 backdrop-blur-md ${theme == 'light' ? 'bg-black/50' : 'bg-white/50'}`}
-                                />
-                            </div>
-                            <input
-                                className={`w-64 block text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-2 file:text-sm file:font-semibold ${theme == 'dark' ? 'file:bg-white/25 file:text-white/50 text-white/75 file:border-white/10' : 'file:bg-black/25 file:text-black/50 text-black/75 file:border-black/10'}`}
-                                type="file"
-                                accept=".splat,.fbx,.obj,.glb,.raw,.vol"
-                                onChange={handleFileUpload}
+
+                        {showSamples && (
+                            <SampleSelector theme={theme} onSelectSample={handleSelectSample} />
+                        )}
+
+                        <div className="flex items-center justify-center">
+                            <div
+                                className={`flex-grow h-[1px] mr-2 ${
+                                    theme === 'light' ? 'bg-black/40' : 'bg-white/40'
+                                }`}
                             />
-                            <div className="">
-                                <div
-                                    className={`${theme == 'light' ? 'text-black' : 'text-white'} text-sm mb-2`}
-                                >
-                                    Volume Dimensions
-                                </div>
-                                <div className="flex gap-2">
-                                    <input
-                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10 text-white' : 'bg-black/25 placeholder:text-black/50 border-black/10 text-black'}`}
-                                        type="number"
-                                        placeholder="X"
-                                        value={tempVolumeDimensions.x}
-                                        onChange={(e) =>
-                                            setTempVolumeDimensions({
-                                                ...tempVolumeDimensions,
-                                                x: parseInt(e.target.value) || 256,
-                                            })
-                                        }
-                                    />
-                                    <input
-                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10 text-white' : 'bg-black/25 placeholder:text-black/50 border-black/10 text-black'}`}
-                                        type="number"
-                                        placeholder="Y"
-                                        value={tempVolumeDimensions.y}
-                                        onChange={(e) =>
-                                            setTempVolumeDimensions({
-                                                ...tempVolumeDimensions,
-                                                y: parseInt(e.target.value) || 256,
-                                            })
-                                        }
-                                    />
-                                    <input
-                                        className={`px-2 py-1 w-20 rounded-md border-2 border-solid backdrop-blur-xl text-center ${theme == 'dark' ? 'bg-white/25 placeholder:text-white/50 border-white/10 text-white' : 'bg-black/25 placeholder:text-black/50 border-black/10 text-black'}`}
-                                        type="number"
-                                        placeholder="Z"
-                                        value={tempVolumeDimensions.z}
-                                        onChange={(e) =>
-                                            setTempVolumeDimensions({
-                                                ...tempVolumeDimensions,
-                                                z: parseInt(e.target.value) || 256,
-                                            })
-                                        }
-                                    />
-                                </div>
-                            </div>
-                            <div className="">
-                                <div
-                                    className={`${theme == 'light' ? 'text-black' : 'text-white'} text-sm mb-2`}
-                                >
-                                    Data Type
-                                </div>
-                                <select
-                                    className={`w-full px-3 py-2 rounded-md border-2 border-solid backdrop-blur-xl ${theme == 'dark' ? 'bg-white/25 border-white/10 text-white' : 'bg-black/25 border-black/10 text-black'}`}
-                                    value={tempVolumeDataType}
-                                    onChange={(e) => {
-                                        if (isValidDataFormat(e.target.value)) {
-                                            setTempVolumeDataType(e.target.value);
-                                        }
-                                    }}
-                                >
-                                    <option value="uint8">uint8</option>
-                                    <option value="uint16">uint16</option>
-                                    <option value="uint32">uint32</option>
-                                    <option value="float32">float32</option>
-                                </select>
-                            </div>
+                            <span className="text-sm">or</span>
+                            <div
+                                className={`flex-grow h-[1px] ml-2 ${
+                                    theme === 'light' ? 'bg-black/40' : 'bg-white/40'
+                                }`}
+                            />
                         </div>
-                    </>
+
+                        <input
+                            className={`w-full block text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:cursor-pointer ${
+                                theme === 'dark'
+                                    ? 'file:bg-white/25 file:text-white text-white/75'
+                                    : 'file:bg-black/25 file:text-black/80 text-black/75'
+                            }`}
+                            type="file"
+                            accept=".splat,.fbx,.obj,.glb,.gltf,.raw,.vol"
+                            onChange={handleFileUpload}
+                        />
+                    </div>
                 )}
+
+                <Hierarchy
+                    models={models}
+                    selectedModelIndex={selectedModelIndex}
+                    onSelectModel={setSelectedModelIndex}
+                    onDeleteModel={handleDeleteModel}
+                />
             </div>
 
             <div className="fixed top-2 right-2 z-10 flex gap-2">
@@ -233,13 +237,21 @@ function App() {
                 <Screenshot canvasRef={canvasRef} theme={theme} />
             </div>
 
-            <ClippingBoxUI
-                settings={volumeSettings}
-                setSettings={setVolumeSettings}
-                theme={theme}
-            />
+            {isVolumeFocused && (
+                <ClippingBoxUI
+                    settings={volumeSettings}
+                    setSettings={setVolumeSettings}
+                    theme={theme}
+                />
+            )}
 
-            <Viewer models={models} canvasRef={canvasRef} volumeSettings={volumeSettings} />
+            <Viewer
+                models={models}
+                canvasRef={canvasRef}
+                volumeSettings={volumeSettings}
+                selectedModelIndex={selectedModelIndex}
+                onSelectModel={setSelectedModelIndex}
+            />
             <Socials />
         </>
     );
