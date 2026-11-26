@@ -1,71 +1,82 @@
 import { useEffect, useMemo, useRef } from 'react';
 
+
+
 import * as THREE from 'three';
 
+
+
 import { useFrame } from '@react-three/fiber';
+
+
 
 import fragmentShader from '../../shaders/3dtextureslicing/fragment.glsl';
 import vertexShader from '../../shaders/3dtextureslicing/vertex.glsl';
 import { RenderFxProps } from '../../types';
 import { DIMENSION } from '../../utils/constants';
+import {MAX_SLICE_VERTICES } from '../../utils/constants';
 
-/** Ray marches the volume inside a unit cube. */
+const EPSILON = 0.0001;
+
+
+const edges= [
+    [0,1],
+    [1,2],
+    [2,3],
+    [3,0],
+    [0,4],
+    [1,5],
+    [2,6],
+    [3,7],
+    [4,5],
+    [5,6],
+    [6,7],
+    [7,4],
+];
+
+const edgeList = [
+    [0, 1, 5, 6, 4, 8, 11, 9, 3, 7, 2, 10], // v0 is front
+    [0, 4, 3, 11, 1, 2, 6, 7, 5, 9, 8, 10], // v1
+    [1, 5, 0, 8, 2, 3, 7, 4, 6, 10, 9, 11], // v2
+    [7, 11, 10, 8, 2, 6, 1, 9, 3, 0, 4, 5], // v3
+
+    [8, 5, 9, 1, 11, 10, 7, 6, 4, 3, 0, 2], // v4
+    [9, 6, 10, 2, 8, 11, 4, 7, 5, 0, 1, 3], // v5
+    [9, 8, 5, 4, 6, 1, 2, 0, 10, 7, 11, 3], // v6
+    [10, 9, 6, 5, 7, 2, 3, 1, 11, 4, 8, 0], // v7
+];
+
+const vertices = [
+    new THREE.Vector3(-0.5, -0.5, -0.5), // v0
+    new THREE.Vector3(0.5, -0.5, -0.5), // v1
+    new THREE.Vector3(0.5, 0.5, -0.5), // v2
+    new THREE.Vector3(-0.5, 0.5, -0.5), // v3
+
+    new THREE.Vector3(-0.5, -0.5, 0.5), // v4
+    new THREE.Vector3(0.5, -0.5, 0.5), // v5
+    new THREE.Vector3(0.5, 0.5, 0.5), // v6
+    new THREE.Vector3(-0.5, 0.5, 0.5), // v7
+];
+
+let num_slices = 256;
+
+
 const Basic3DTextureFx = ({ voxels }: RenderFxProps) => {
 
     const meshRef = useRef<THREE.Mesh>(null);
     const cameraPosition = useMemo(() => new THREE.Vector3(), []);
-    const EPSILON = 0.0001;
-    const MAX_SLICES = 512;
-    const MAX_SLICE_VERTICES = MAX_SLICES *12;
 
-    let num_slices = 256;
+    const vTextureSlices = useMemo(() => {
+        const slices = new Array(512 * 12);
 
-    const edges= [
-        [0,1],
-        [1,2],
-        [2,3],
-        [3,0],
-        [0,4],
-        [1,5],
-        [2,6],
-        [3,7],
-        [4,5],
-        [5,6],
-        [6,7],
-        [7,4],
-    ];
+        for (let i = 0; i < slices.length; i++) {
+            slices[i] = new THREE.Vector3();
+        }
 
-    const edgeList= [
-        [0,1,5,6,   4,8,11,9,  3,7,2,10 ],      // v0 is front
-        [0,4,3,11,  1,2,6,7,   5,9,8,10 ],      // v1 
-        [1,5,0,8,   2,3,7,4,   6,10,9,11],      // v2 
-        [7,11,10,8, 2,6,1,9,   3,0,4,5  ],      // v3 
+        return slices;
+    }, []);
 
-        [8, 5, 9, 1, 11, 10, 7, 6, 4, 3, 0, 2], // v4 
-        [9, 6, 10, 2, 8, 11, 4, 7, 5, 0, 1, 3], // v5 
-        [9, 8, 5, 4, 6, 1, 2, 0, 10, 7, 11, 3], // v6 
-        [10, 9, 6, 5, 7, 2, 3, 1, 11, 4, 8, 0], // v7 
-    ];
-
-    const vTextureSlices = new Array(512 *12);
-
-    for(let i =0;i<vTextureSlices.length;i++)
-    {
-        vTextureSlices[i]=new THREE.Vector3();
-    }
-
-    const viewDirection = new THREE.Vector3(1.0,1.0,1.0);
-    const vertices = [
-        new THREE.Vector3(-0.5, -0.5, -0.5), // v0
-        new THREE.Vector3( 0.5, -0.5, -0.5), // v1
-        new THREE.Vector3( 0.5,  0.5, -0.5), // v2
-        new THREE.Vector3(-0.5,  0.5, -0.5), // v3
-
-        new THREE.Vector3(-0.5, -0.5,  0.5), // v4
-        new THREE.Vector3( 0.5, -0.5,  0.5), // v5
-        new THREE.Vector3( 0.5,  0.5,  0.5), // v6
-        new THREE.Vector3(-0.5,  0.5,  0.5)  // v7
-    ];
+    const viewDirection = useMemo(() => new THREE.Vector3(1.0, 1.0, 1.0), []);
 
 
     const texture = useMemo(() => {
