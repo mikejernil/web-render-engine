@@ -99,6 +99,7 @@ const Basic3DTextureFx = ({voxels,isClickDragging = false}: RenderFxProps) => {
         geometry= {boundingBoxGeometry} 
         >
             <shaderMaterial
+                depthWrite={false}
                 uniforms={uniforms}
                 vertexShader={vertexShader}
                 fragmentShader={fragmentShader}
