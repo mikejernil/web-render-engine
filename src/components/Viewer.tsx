@@ -1,5 +1,6 @@
 import React, { Suspense, useMemo } from 'react';
 
+import * as THREE from 'three';
 import { FileLoader } from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
@@ -92,11 +93,29 @@ function Box() {
 
 function FbxModel({ url }: { url: string }) {
     const fbx = useLoader(FBXLoader, url);
+
+    // Calculate bounding box to auto-scale
+    const bbox = new THREE.Box3().setFromObject(fbx);
+    const size = bbox.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const scale = 2 / maxDim;
+
+    fbx.scale.multiplyScalar(scale);
+
     return <primitive object={fbx} />;
 }
 
 function ObjModel({ url }: { url: string }) {
     const obj = useLoader(OBJLoader, url);
+
+    // Calculate bounding box to auto-scale
+    const bbox = new THREE.Box3().setFromObject(obj);
+    const size = bbox.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const scale = 2 / maxDim;
+
+    obj.scale.multiplyScalar(scale);
+
     return <primitive object={obj} />;
 }
 
