@@ -1,7 +1,10 @@
-import { SampleModel } from '../types';
+import { DataFormat, SampleModel } from '../types';
 import { DIMENSION, VOXEL_COUNT } from './constants';
 
-// Cache generated blob URLs to avoid recomputing volumes
+const REMOTE_VOLUME_BASE_URL =
+    'https://huggingface.co/datasets/YOUR_HF_USERNAME/volume-samples/resolve/main';
+
+    // Cache generated blob URLs to avoid recomputing volumes
 const generatedUrlCache: Record<string, string> = {};
 
 /** Generates a 256^3 sphere with internal wave noise. */
@@ -37,7 +40,6 @@ function createNoiseSphereVolumeUrl(): string {
     return blobUrl;
 }
 
-/** Generates a 256^3 procedural gyroid cube volume. */
 function createGyroidCubeVolumeUrl(): string {
     if (generatedUrlCache.gyroidCube) return generatedUrlCache.gyroidCube;
 
@@ -69,6 +71,59 @@ function createGyroidCubeVolumeUrl(): string {
     return blobUrl;
 }
 
+const createRemoteVolumeSample = (
+    id: string,
+    name: string,
+    fileName: string,
+    x: number,
+    y: number,
+    z: number,
+    volumeDataFormat: DataFormat,
+): SampleModel => ({
+    id: `vol-${id}`,
+    name,
+    type: 'volume',
+    url: `${REMOTE_VOLUME_BASE_URL}/${fileName}`,
+    thumbnail: '',
+    volumeDimensions: { x, y, z },
+    volumeDataFormat,
+});
+
+const REMOTE_VOLUME_SAMPLES: SampleModel[] = [
+    // uint8
+    createRemoteVolumeSample('bonsai', 'Bonsai', 'bonsai_256x256x256_uint8.raw', 256, 256, 256, 'uint8'),
+    createRemoteVolumeSample('heptane', 'CSAFE Heptane', 'csafe_heptane_302x302x302_uint8.raw', 302, 302, 302, 'uint8'),
+    createRemoteVolumeSample('frog', 'Frog', 'frog_256x256x44_uint8.raw', 256, 256, 44, 'uint8'),
+    createRemoteVolumeSample('head', 'Head', 'vis_male_128x256x256_uint8.raw', 128, 256, 256, 'uint8'),
+    createRemoteVolumeSample('hydrogen', 'Hydrogen Atom', 'hydrogen_atom_128x128x128_uint8.raw', 128, 128, 128, 'uint8'),
+    createRemoteVolumeSample('kingsnake', 'Kingsnake', 'kingsnake_1024x1024x795_uint8.raw', 1024, 1024, 795, 'uint8'),
+    createRemoteVolumeSample('lobster', 'Lobster', 'lobster_301x324x56_uint8.raw', 301, 324, 56, 'uint8'),
+    createRemoteVolumeSample('marschner', 'Marschner Lobb', 'marschner_lobb_41x41x41_uint8.raw', 41, 41, 41, 'uint8'),
+    createRemoteVolumeSample('ventricles', 'MRI Ventricles', 'mri_ventricles_256x256x124_uint8.raw', 256, 256, 124, 'uint8'),
+    createRemoteVolumeSample('neghip', 'Neghip', 'neghip_64x64x64_uint8.raw', 64, 64, 64, 'uint8'),
+    createRemoteVolumeSample('skull', 'Skull', 'skull_256x256x256_uint8.raw', 256, 256, 256, 'uint8'),
+    createRemoteVolumeSample('statue-leg', 'Statue Leg', 'statue_leg_341x341x93_uint8.raw', 341, 341, 93, 'uint8'),
+    createRemoteVolumeSample('tooth', 'Tooth', 'tooth_103x94x161_uint8.raw', 103, 94, 161, 'uint8'),
+    createRemoteVolumeSample('zeiss', 'Zeiss', 'zeiss_680x680x680_uint8.raw', 680, 680, 680, 'uint8'),
+
+    // uint16
+    createRemoteVolumeSample('backpack', 'Backpack', 'backpack_512x512x373_uint16.raw', 512, 512, 373, 'uint16'),
+    createRemoteVolumeSample('carp', 'Carp', 'carp_256x256x512_uint16.raw', 256, 256, 512, 'uint16'),
+    createRemoteVolumeSample('christmas-tree', 'Christmas Tree', 'christmas_tree_512x499x512_uint16.raw', 512, 499, 512, 'uint16'),
+    createRemoteVolumeSample('mrt-angio', 'MRT Angio', 'mrt_angio_416x512x112_uint16.raw', 416, 512, 112, 'uint16'),
+    createRemoteVolumeSample('pancreas', 'Pancreas', 'pancreas_240x512x512_int16.raw', 240, 512, 512, 'uint16'),
+    createRemoteVolumeSample('present', 'Present', 'present_492x492x442_uint16.raw', 492, 492, 442, 'uint16'),
+    createRemoteVolumeSample('prone', 'Colon Prone', 'prone_512x512x463_uint16.raw', 512, 512, 463, 'uint16'),
+    createRemoteVolumeSample('stag-beetle', 'Stag Beetle', 'stag_beetle_832x832x494_uint16.raw', 832, 832, 494, 'uint16'),
+    createRemoteVolumeSample('stent', 'Stent', 'stent_512x512x174_uint16.raw', 512, 512, 174, 'uint16'),
+
+    // float32
+    createRemoteVolumeSample('duct', 'Duct Flow', 'duct_193x194x1000_float32.raw', 193, 194, 1000, 'float32'),
+    createRemoteVolumeSample('hcci-oh', 'HCCI OH', 'hcci_oh_560x560x560_float32.raw', 560, 560, 560, 'float32'),
+    createRemoteVolumeSample('magnetic', 'Magnetic Reconnection', 'magnetic_reconnection_512x512x512_float32.raw', 512, 512, 512, 'float32'),
+    createRemoteVolumeSample('turbulence', 'TACC Turbulence', 'tacc_turbulence_256x256x256_float32.raw', 256, 256, 256, 'float32'),
+];
+
 // Built-in sample models mapped to public folder assets
 export const SAMPLE_MODELS: SampleModel[] = [
     {
@@ -98,6 +153,7 @@ export const SAMPLE_MODELS: SampleModel[] = [
         volumeDimensions: { x: 256, y: 256, z: 256 },
         volumeDataFormat: 'uint8',
     },
+    ...REMOTE_VOLUME_SAMPLES,
     {
         id: 'splat-nike',
         name: 'Nike Shoe',
