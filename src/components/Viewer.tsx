@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 
 import { FileLoader } from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
@@ -37,8 +37,61 @@ const Viewer: React.FC<ViewerProps> = ({
 }) => {
     const { theme } = useTheme();
 
+    const [isClickDrag, setIsClickDragging] = useState(false);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        let activePointerId: number | null = null;
+        let hasDragged = false;
+
+        const onPointerDown = (event: PointerEvent) =>
+        {
+            if (event.button !== 0) return;
+            
+            activePointerId = event.pointerId;
+            hasDragged = false;
+            setIsClickDragging(false);
+            console.log('Pointer down on canvas:', event.pointerId);
+        };
+
+        const onPointerMove = (event: PointerEvent) =>
+        {
+            if (
+                event.pointerId === activePointerId &&
+                (event.buttons & 1) !== 0 &&
+                !hasDragged
+            )
+            {
+                hasDragged = true;
+                setIsClickDragging(true);
+                console.log('Canvas is being dragged:', event.pointerId);
+            }
+        };
+
+        const finishDrag = (event: PointerEvent) =>
+        {
+            if (event.pointerId !== activePointerId) return;
+            activePointerId = null;
+            hasDragged = false;
+            setIsClickDragging(false);
+            console.log('Canvas pointer released or canceled:', event.pointerId);
+        };
+
+        canvas.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', finishDrag);
+
+        return () => {
+            canvas.removeEventListener('pointerdown', onPointerDown);
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', finishDrag);
+        };
+    }, [canvasRef]);
+
     return (
-        <div className="w-screen h-screen">
+        <div className="w-screen h-screen" data-canvas-dragging={isClickDrag}>
             <Canvas
                 ref={canvasRef}
                 gl={{ preserveDrawingBuffer: true }}
@@ -70,6 +123,7 @@ const Viewer: React.FC<ViewerProps> = ({
                         key={model.id}
                         model={model}
                         volumeSettings={volumeSettings}
+                        isClickDragging={isClickDrag}
                         isSelected={selectedModelIndex === index}
                         onSelect={() => onSelectModel(index)}
                     />
@@ -108,10 +162,12 @@ function GlbModel({ url }: { url: string }) {
 function VolumeModel({
     model,
     volumeSettings,
+    isClickDragging,
     isSelected,
 }: {
     model: Model;
     volumeSettings: VolumeSettings;
+    isClickDragging: boolean;
     isSelected: boolean;
 }) {
     const buffer = useLoader(FileLoader, model.url, (loader) =>
@@ -138,6 +194,7 @@ function VolumeModel({
             volumeData={volumeData}
             volumeSettings={volumeSettings}
             volumeDimensions={dimensions}
+            isClickDragging={isClickDragging}
             isSelected={isSelected}
         />
     );
@@ -146,11 +203,13 @@ function VolumeModel({
 function Models({
     model,
     volumeSettings,
+    isClickDragging,
     isSelected,
     onSelect,
 }: {
     model: Model;
     volumeSettings: VolumeSettings;
+    isClickDragging: boolean;
     isSelected: boolean;
     onSelect: () => void;
 }) {
@@ -181,6 +240,7 @@ function Models({
                         <VolumeModel
                             model={model}
                             volumeSettings={volumeSettings}
+                            isClickDragging={isClickDragging}
                             isSelected={isSelected}
                         />
                     )}

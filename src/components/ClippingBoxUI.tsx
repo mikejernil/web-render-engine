@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 
-import { useRef } from 'react';
 
 import { ControlOutlined, EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 
@@ -54,42 +53,9 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
     const isoValue = settings.isoValue ?? DEFAULT_ISO_VALUE;
     const { hasWireframe = false, hasIsoValue = false } = RENDER_FX[activeFx] || RENDER_FX[0];
 
-    // Flags to call SliceVolume() when object is rotated or resized
-    const bSliceUpdate = useRef(true);
-    const bMouseDown = useRef(false);
 
     // Reset wireframe when unsupported and bind W hotkey when supported
     useEffect(() => {
-        
-        //console.log("Mouse event useEffect started");
-
-        const onmousedown = (event: MouseEvent) => {
-            //console.log("MOUSE DOWN:", event.button);
-            if (event.button == 0) {
-                bMouseDown.current=true;
-            }
-        };
-
-        const onmouseup = (event: MouseEvent) => {
-            //console.log("MOUSE UP:", event.button);
-            if (event.button == 0) {
-                bMouseDown.current=false;
-            }
-        };
-
-        const onmousemove = (event: MouseEvent) => {
-            //console.log("MOUSE MOVE:", event.button);
-            if(event.button)
-            {
-                //console.log("MOUSE MOVE:", event.button);
-            }
-        };
-
-        window.addEventListener('mousedown', onmousedown);
-        window.addEventListener('mouseup', onmouseup);
-        window.addEventListener('mousemove', onmousemove);
-
-
         if (!hasWireframe) {
             setSettings((prev) => ({ ...prev, wireframe: false }));
             return;
@@ -104,11 +70,7 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
         };
         window.addEventListener('keydown', onKeyDown);
 
-
         return () => {
-            window.removeEventListener('mousedown', onmousedown);
-            window.removeEventListener('mouseup', onmouseup);
-            window.removeEventListener('mousemove', onmousemove);
             window.removeEventListener('keydown', onKeyDown);
         }
     }, [hasWireframe, setSettings]);

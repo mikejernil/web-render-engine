@@ -19,8 +19,7 @@ import { SliceVolume_ } from '../../utils/sliceVolume';
 
 let num_slices = 256;
 
-const Basic3DTextureFx = ({ voxels }: RenderFxProps) => {
-
+const Basic3DTextureFx = ({voxels,isClickDragging = false}: RenderFxProps) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const cameraPosition = useMemo(() => new THREE.Vector3(), []);
 
@@ -76,7 +75,7 @@ const Basic3DTextureFx = ({ voxels }: RenderFxProps) => {
     useEffect(() => {
         uniforms.uVolumeTexture.value = texture;
 
-        SliceVolume_(num_slices,viewDirection,boundingBoxGeometry,vTextureSlices);
+        SliceVolume_(num_slices, viewDirection, boundingBoxGeometry, vTextureSlices);
 
         return () => texture.dispose();
     }, [texture, uniforms,boundingBoxGeometry]);
@@ -90,8 +89,8 @@ const Basic3DTextureFx = ({ voxels }: RenderFxProps) => {
         camera.updateMatrix();
         viewDirection.copy(cameraPosition).normalize();
 
-        ////if(bSliceUpdate)
-        ////    SliceVolume_(num_slices,viewDirection,boundingBoxGeometry,vTextureSlices);
+        if (isClickDragging)
+           SliceVolume_(num_slices, viewDirection, boundingBoxGeometry, vTextureSlices);
 
     });
 

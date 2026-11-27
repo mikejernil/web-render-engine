@@ -15,6 +15,7 @@ export interface VolumetricRendererProps {
     volumeData: Uint8Array | Uint16Array | Uint32Array | Float32Array | null;
     volumeSettings: VolumeSettings;
     volumeDimensions?: VolumeDimensions;
+    isClickDragging: boolean;
     isSelected?: boolean;
 }
 
@@ -42,6 +43,7 @@ const VolumetricRenderer = ({
     volumeData,
     volumeSettings,
     volumeDimensions,
+    isClickDragging,
     isSelected = false,
 }: VolumetricRendererProps) => {
     const activeFx = volumeSettings.activeFx ?? 0;
@@ -93,10 +95,21 @@ const VolumetricRenderer = ({
                     isoValue={isoValue}
                     volumeSettings={volumeSettings}
                     volumeDimensions={dims}
+                    isClickDragging={isClickDragging}
                 />
             )}
             {isSelected && volumeSettings.showClippingBox && (
-                <lineSegments geometry={clippingGeometry} scale={0.5}
+                <lineSegments geometry={clippingGeometry} scale={0.5}>
+                    <lineBasicMaterial color="#00e5ff" />
+                </lineSegments>
+            )}
+        </>
+    );
+};
+
+export default VolumetricRenderer;
+
+/*
                 
                 onPointerDown={(event)=>{
                     if(event.button==0)
@@ -113,13 +126,4 @@ const VolumetricRenderer = ({
 
                     }
                 }}
-
-                >
-                    <lineBasicMaterial color="#00e5ff" />
-                </lineSegments>
-            )}
-        </>
-    );
-};
-
-export default VolumetricRenderer;
+*/
