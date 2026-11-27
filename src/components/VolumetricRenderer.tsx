@@ -96,7 +96,25 @@ const VolumetricRenderer = ({
                 />
             )}
             {isSelected && volumeSettings.showClippingBox && (
-                <lineSegments geometry={clippingGeometry} scale={0.5}>
+                <lineSegments geometry={clippingGeometry} scale={0.5}
+                
+                onPointerDown={(event)=>{
+                    if(event.button==0)
+                    {
+                        // LButton is Pressed:
+                        
+                    }
+                }}
+                
+                onPointerMove={(event)=>{
+                    if(event.button==0)
+                    {
+                        // MouseMove:
+
+                    }
+                }}
+
+                >
                     <lineBasicMaterial color="#00e5ff" />
                 </lineSegments>
             )}
