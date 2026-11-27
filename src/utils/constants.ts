@@ -29,3 +29,11 @@ export const CUBE_TETRAHEDRA = [
     [0, 7, 4, 6],
     [0, 4, 5, 6],
 ];
+
+export const EPSILON = 0.0001;
+
+const MAX_SLICES = 512;
+export const MAX_SLICE_VERTICES = MAX_SLICES *12;
+
+
+

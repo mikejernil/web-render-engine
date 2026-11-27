@@ -63,6 +63,7 @@ export interface VolumeSettings {
 /** What every render effect gets to draw with. */
 export interface RenderFxProps {
     voxels: Uint8Array;
+    isClickDragging?: boolean;
     wireframe?: boolean;
     isoValue?: number;
     volumeSettings?: VolumeSettings;

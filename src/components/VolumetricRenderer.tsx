@@ -8,12 +8,14 @@ import { detectFormat, getMaxValueForFormat } from '../utils/volumeData';
 import MarchingTetrahedraFx from './volume/MarchingTetrahedraFx';
 import RaycastingFx from './volume/RaycastingFx';
 import PseudoIsoSurfaceFx from './volume/PseudoIsoSurfaceFx';
+import Basic3DTexture from './volume/Basic3DTexture';
 
 export interface VolumetricRendererProps {
     /** Volume voxel buffer. `null` while loading. */
     volumeData: Uint8Array | Uint16Array | Uint32Array | Float32Array | null;
     volumeSettings: VolumeSettings;
     volumeDimensions?: VolumeDimensions;
+    isClickDragging: boolean;
     isSelected?: boolean;
 }
 
@@ -27,6 +29,7 @@ export const RENDER_FX: RenderFx[] = [
         name: 'pseudoIsoSurface', Effect: PseudoIsoSurfaceFx,
         hasIsoValue: true,
     },
+    { name: 'Basic 3DTexture', Effect: Basic3DTexture },
     {
         name: 'Marching Tetrahedra',
         Effect: MarchingTetrahedraFx,
@@ -40,6 +43,7 @@ const VolumetricRenderer = ({
     volumeData,
     volumeSettings,
     volumeDimensions,
+    isClickDragging,
     isSelected = false,
 }: VolumetricRendererProps) => {
     const activeFx = volumeSettings.activeFx ?? 0;
@@ -91,6 +95,7 @@ const VolumetricRenderer = ({
                     isoValue={isoValue}
                     volumeSettings={volumeSettings}
                     volumeDimensions={dims}
+                    isClickDragging={isClickDragging}
                 />
             )}
             {isSelected && volumeSettings.showClippingBox && (
@@ -103,3 +108,22 @@ const VolumetricRenderer = ({
 };
 
 export default VolumetricRenderer;
+
+/*
+                
+                onPointerDown={(event)=>{
+                    if(event.button==0)
+                    {
+                        // LButton is Pressed:
+                        
+                    }
+                }}
+                
+                onPointerMove={(event)=>{
+                    if(event.button==0)
+                    {
+                        // MouseMove:
+
+                    }
+                }}
+*/

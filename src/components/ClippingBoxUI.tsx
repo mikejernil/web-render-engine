@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 
+
 import { ControlOutlined, EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 
-import {
-    ClippingBoxFaces,
-    ColorMapPreset,
-    VolumeSettings,
-    isValidDataFormat,
-} from '../types';
+
+
+import { ClippingBoxFaces, ColorMapPreset, VolumeSettings, isValidDataFormat } from '../types';
 import { INITIAL_CLIPPING_BOX_FACES } from '../utils/clippingBox';
 import { DEFAULT_ISO_VALUE, RENDER_FX } from './VolumetricRenderer';
+
 
 export interface ClippingBoxUIProps {
     settings: VolumeSettings;
@@ -43,6 +42,8 @@ const COLOR_PRESETS: Array<{ label: string; value: ColorMapPreset }> = [
     { label: 'Thermal', value: 'thermal' },
 ];
 
+
+
 /** UI panel for volume settings, shaders, and clipping bounds. */
 const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, theme }) => {
     const [open, setOpen] = useState(true);
@@ -52,13 +53,14 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
     const isoValue = settings.isoValue ?? DEFAULT_ISO_VALUE;
     const { hasWireframe = false, hasIsoValue = false } = RENDER_FX[activeFx] || RENDER_FX[0];
 
+
     // Reset wireframe when unsupported and bind W hotkey when supported
     useEffect(() => {
         if (!hasWireframe) {
             setSettings((prev) => ({ ...prev, wireframe: false }));
             return;
         }
-
+        
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key.toLowerCase() !== 'w' || event.repeat) return;
             if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -66,9 +68,11 @@ const ClippingBoxUI: React.FC<ClippingBoxUIProps> = ({ settings, setSettings, th
 
             setSettings((prev) => ({ ...prev, wireframe: !prev.wireframe }));
         };
-
         window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+        }
     }, [hasWireframe, setSettings]);
 
     const panelBg =
