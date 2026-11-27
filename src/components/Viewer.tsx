@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 
 import { FileLoader } from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
@@ -36,9 +36,16 @@ const Viewer: React.FC<ViewerProps> = ({
     onSelectModel,
 }) => {
     const { theme } = useTheme();
+    const [downloadText, setDownloadText] = useState<string | null>(null);
 
     return (
         <div className="w-screen h-screen">
+            {downloadText && (
+                <div className="fixed bottom-3 right-3 z-20 px-3 py-2 rounded-lg bg-neutral-900/85 text-white text-xs select-none">
+                    {downloadText}
+                </div>
+            )}
+
             <Canvas
                 ref={canvasRef}
                 gl={{ preserveDrawingBuffer: true }}
@@ -72,6 +79,7 @@ const Viewer: React.FC<ViewerProps> = ({
                         volumeSettings={volumeSettings}
                         isSelected={selectedModelIndex === index}
                         onSelect={() => onSelectModel(index)}
+                        onProgress={setDownloadText}
                     />
                 ))}
             </Canvas>
@@ -109,14 +117,28 @@ function VolumeModel({
     model,
     volumeSettings,
     isSelected,
+    onProgress,
 }: {
     model: Model;
     volumeSettings: VolumeSettings;
     isSelected: boolean;
+    onProgress: (text: string | null) => void;
 }) {
-    const buffer = useLoader(FileLoader, model.url, (loader) =>
-        (loader as FileLoader).setResponseType('arraybuffer'),
+    const buffer = useLoader(
+        FileLoader,
+        model.url,
+        (loader) => (loader as FileLoader).setResponseType('arraybuffer'),
+        (e) => {
+            const loaded = (e.loaded / 1048576).toFixed(1);
+            const total = (e.total / 1048576).toFixed(1);
+            const pct = e.total ? Math.round((e.loaded / e.total) * 100) : 0;
+            onProgress(`Downloading ${model.name}: ${loaded}/${total} MB (${pct}%)`);
+        },
     ) as ArrayBuffer;
+
+    useEffect(() => {
+        onProgress(null);
+    }, [buffer, onProgress]);
 
     const volumeData = useMemo(() => {
         const dataFormat = isSelected
@@ -148,11 +170,13 @@ function Models({
     volumeSettings,
     isSelected,
     onSelect,
+    onProgress,
 }: {
     model: Model;
     volumeSettings: VolumeSettings;
     isSelected: boolean;
     onSelect: () => void;
+    onProgress: (text: string | null) => void;
 }) {
     return (
         <Suspense fallback={<Box />}>
@@ -182,6 +206,7 @@ function Models({
                             model={model}
                             volumeSettings={volumeSettings}
                             isSelected={isSelected}
+                            onProgress={onProgress}
                         />
                     )}
                 </group>
