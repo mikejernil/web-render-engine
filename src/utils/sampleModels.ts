@@ -2,7 +2,7 @@ import { DataFormat, SampleModel } from '../types';
 import { DIMENSION, VOXEL_COUNT } from './constants';
 
 const REMOTE_VOLUME_BASE_URL =
-    'https://huggingface.co/datasets/YOUR_HF_USERNAME/volume-samples/resolve/main';
+    'https://huggingface.co/datasets/notHarshPrajapati/volume-samples/resolve/main';
 
     // Cache generated blob URLs to avoid recomputing volumes
 const generatedUrlCache: Record<string, string> = {};
@@ -84,7 +84,7 @@ const createRemoteVolumeSample = (
     name,
     type: 'volume',
     url: `${REMOTE_VOLUME_BASE_URL}/${fileName}`,
-    thumbnail: '',
+    thumbnail: `/Sample/vol-${id}.jpg`,
     volumeDimensions: { x, y, z },
     volumeDataFormat,
 });
@@ -149,7 +149,7 @@ export const SAMPLE_MODELS: SampleModel[] = [
         name: 'Engine 256',
         type: 'volume',
         url: '/assets/Engine256.raw',
-        thumbnail: '',
+        thumbnail: '/Sample/vol-engine.jpg',
         volumeDimensions: { x: 256, y: 256, z: 256 },
         volumeDataFormat: 'uint8',
     },
