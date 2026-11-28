@@ -26,11 +26,11 @@ const Hierarchy: FC<HierarchyProps> = ({
                 theme === 'dark'
                     ? 'bg-neutral-900/75 text-white border-white/10'
                     : 'bg-black/15 text-black border-black/10'
-            } p-2 gap-2 flex flex-col rounded-md backdrop-blur-md select-none w-72 border`}
+            } p-2 gap-2 flex flex-col rounded-md backdrop-blur-md select-none w-72 border overflow-y-auto`}
         >
             <div className={`text-base font-semibold text-center`}>Hierarchy</div>
 
-            <div className={`overflow-y-auto max-h-[calc(4*44px+8px)]`}>
+            <div className={`flex flex-col gap-1`}>
                 {models.length === 0 ? (
                     <div
                         className={`py-2 text-center text-sm ${

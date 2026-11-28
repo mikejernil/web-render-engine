@@ -148,9 +148,9 @@ function App() {
 
     return (
         <>
-            <div className="flex flex-col gap-2 fixed top-2 left-2 z-10 w-72">
+            <div className="flex flex-col gap-2 fixed top-2 left-2 z-10 w-72" style={{ maxHeight: 'calc(100vh - 82px)' }}>
                 <div
-                    className={`text-3xl font-bold select-none ${
+                    className={`text-3xl font-bold select-none flex-shrink-0 ${
                         theme === 'dark' ? 'text-white' : 'text-black'
                     }`}
                 >
@@ -158,7 +158,7 @@ function App() {
                 </div>
 
                 <div
-                    className={`p-2.5 gap-2 flex items-center justify-center rounded-lg border backdrop-blur-md cursor-pointer select-none ${panelBg}`}
+                    className={`p-2.5 gap-2 flex items-center justify-center rounded-lg border backdrop-blur-md cursor-pointer select-none flex-shrink-0 ${panelBg}`}
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
                     <PlusCircleOutlined />
@@ -167,7 +167,8 @@ function App() {
 
                 {isMenuOpen && (
                     <div
-                        className={`p-3 rounded-xl border backdrop-blur-xl flex flex-col gap-3 ${panelBg}`}
+                        className={`p-3 rounded-xl border backdrop-blur-xl flex flex-col gap-3 overflow-y-auto flex-shrink-0 ${panelBg}`}
+                        style={{ maxHeight: 'calc(100vh - 180px)' }}
                     >
                         <input
                             className={`px-3.5 py-2 w-full rounded-lg border border-solid outline-none ${inputStyle}`}
